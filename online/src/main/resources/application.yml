@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: online
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mainDB
+    username: springuser
+    password: secret
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      format_sql: true
+    show-sql: true
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 6000
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  cache:
+    type: redis
+
+app:
+  jwt:
+    secret: ${SECRET_KEY}
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
