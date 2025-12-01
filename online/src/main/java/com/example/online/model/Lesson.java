@@ -24,7 +24,14 @@ public class Lesson {
     private String documentURL;
     private String contentURL;
     private String commentURL;
+
+    @ManyToOne
+    @JoinColumn(name = "module_id")
+    private Module module;
+
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
+
+
 
 }

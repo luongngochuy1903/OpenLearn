@@ -32,6 +32,9 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PostCourse> postCourses = new HashSet<>();
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CourseModule> courseModules = new HashSet<>();
+
     private String commentURL;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;

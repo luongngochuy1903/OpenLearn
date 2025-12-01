@@ -15,6 +15,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "community_members")
 public class CommunityMember {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne
     @JoinColumn(name = "community_id")
     private Community community;
