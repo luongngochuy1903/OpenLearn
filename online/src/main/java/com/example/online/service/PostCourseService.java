@@ -5,4 +5,5 @@ import com.example.online.model.PostCourse;
 
 public interface PostCourseService {
     PostCourse createPostCourse(PostCourseRequest postCourseRequest);
+    void save(PostCourse postCourse);
 }

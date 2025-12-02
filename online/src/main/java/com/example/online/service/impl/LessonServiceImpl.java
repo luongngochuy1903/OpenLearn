@@ -19,4 +19,8 @@ public class LessonServiceImpl implements LessonService {
                 .contentURL(lessonCreateRequest.getContentUrl()).documentURL(lessonCreateRequest.getDocumentUrl())
                 .createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
     }
+
+    public void saveLesson(Lesson lesson){
+        lessonRepository.save(lesson);
+    }
 }

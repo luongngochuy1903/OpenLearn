@@ -2,16 +2,14 @@ package com.example.online.model;
 
 import com.example.online.enumerate.NotificationType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter        // sinh getter cho tất cả field
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -5,4 +5,5 @@ import com.example.online.model.Lesson;
 
 public interface LessonService {
     Lesson createLesson(LessonCreateRequest lessonCreateRequest);
+    void saveLesson(Lesson lesson);
 }

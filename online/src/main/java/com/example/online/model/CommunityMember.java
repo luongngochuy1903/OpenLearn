@@ -2,12 +2,10 @@ package com.example.online.model;
 
 import com.example.online.enumerate.CommunityRole;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter        // sinh getter cho tất cả field
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

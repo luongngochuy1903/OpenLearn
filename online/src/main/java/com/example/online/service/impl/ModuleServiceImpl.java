@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -15,8 +16,9 @@ public class ModuleServiceImpl implements ModuleService {
     private final ModuleRepository moduleRepository;
 
     public Module createModule(ModuleCreateRequest moduleCreateRequest){
-        return Module.builder().name(moduleCreateRequest.getName()).description(moduleCreateRequest.getDescription())
-                .createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
+        return Module.builder().name(moduleCreateRequest.getName()).description(moduleCreateRequest.getDescription()).courseModules(new HashSet<>())
+                .lessons(new HashSet<>()).createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
+
     }
 
     public void saveModule(Module module){
