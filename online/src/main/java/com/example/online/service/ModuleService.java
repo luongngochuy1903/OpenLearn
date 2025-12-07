@@ -6,4 +6,5 @@ import com.example.online.model.Module;
 public interface ModuleService {
     Module createModule(ModuleCreateRequest moduleCreateRequest);
     void saveModule(Module module);
+    void deleteModule(Long moduleId);
 }

@@ -9,9 +9,9 @@ import lombok.Data;
 @AllArgsConstructor
 @Builder
 public class AuthenticationRequest {
-    @NotNull(message = "Không được để trống Email")
+    @NotNull(message = "Email cannot be empty")
     private String email;
 
-    @NotNull(message = "Không được để trống mật khẩu")
+    @NotNull(message = "Password cannot be empty")
     private String password;
 }

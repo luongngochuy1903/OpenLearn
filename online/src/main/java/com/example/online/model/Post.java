@@ -19,7 +19,7 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String contentURL;
+    private String contentMarkdown;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
 

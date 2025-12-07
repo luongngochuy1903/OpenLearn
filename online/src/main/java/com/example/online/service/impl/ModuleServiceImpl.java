@@ -1,6 +1,7 @@
 package com.example.online.service.impl;
 
 import com.example.online.DTO.ModuleCreateRequest;
+import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.model.Module;
 import com.example.online.repository.ModuleRepository;
 import com.example.online.service.ModuleService;
@@ -23,5 +24,10 @@ public class ModuleServiceImpl implements ModuleService {
 
     public void saveModule(Module module){
         moduleRepository.save(module);
+    }
+
+    public void deleteModule(Long moduleId){
+        Module module = moduleRepository.findById(moduleId).orElseThrow(() -> new ResourceNotFoundException("Module not found !"));
+        moduleRepository.delete(module);
     }
 }

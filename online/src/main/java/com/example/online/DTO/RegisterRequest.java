@@ -9,12 +9,12 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class RegisterRequest {
-    @NotNull(message = "Không được để trống")
+    @NotNull(message = "First name cannot be empty")
     private String firstName;
-    @NotNull(message = "Không được để trống")
+    @NotNull(message = "Last name cannot be empty")
     private String lastName;
-    @NotNull(message = "Không được để trống")
+    @NotNull(message = "Email cannot be empty")
     private String email;
-    @NotNull(message = "Không được để trống")
+    @NotNull(message = "Password cannot be empty")
     private String password;
 }

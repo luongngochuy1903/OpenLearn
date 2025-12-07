@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class PostCreateResponse {
-    private Long postId;
+@AllArgsConstructor
+public class ModuleCreateResponse {
+    private Long moduleId;
     private String message;
 }

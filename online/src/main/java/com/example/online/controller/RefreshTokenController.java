@@ -6,6 +6,8 @@ import com.example.online.model.RefreshToken;
 import com.example.online.service.JwtService;
 import com.example.online.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +22,7 @@ public class RefreshTokenController {
     private final JwtService jwtService;
 
     @PostMapping("/refresh-token")
-    public AuthenticationResponse refreshAccessToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<AuthenticationResponse> refreshAccessToken(@RequestBody RefreshTokenRequest request) {
 
         RefreshToken refreshToken = refreshTokenService.findRefreshTokenByToken(request.getToken());
 
@@ -31,10 +33,12 @@ public class RefreshTokenController {
 
         var newRefreshToken = refreshTokenService.rotateRefreshToken(user);
 
-        return AuthenticationResponse.builder()
+        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
                 .token(newAccessToken)
                 .refreshToken(newRefreshToken.getToken())
                 .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(authenticationResponse);
     }
 
 }

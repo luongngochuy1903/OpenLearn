@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PostCreateWithoutCourseRequest {
     private String name;
-    private String contentUrl;
+    private String contentMarkdown;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
 }
