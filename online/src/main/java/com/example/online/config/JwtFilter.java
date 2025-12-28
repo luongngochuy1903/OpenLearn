@@ -1,6 +1,6 @@
 package com.example.online.config;
 
-import com.example.online.service.JwtService;
+import com.example.online.authentication.jwt.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

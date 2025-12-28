@@ -1,0 +1,19 @@
+{
+  "number_of_shards": 2,
+  "number_of_replicas": 1,
+  "analysis": {
+    "analyzer": {
+      "text_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": ["lowercase"]
+      }
+    },
+    "normalizer": {
+      "lowercase_normalizer": {
+        "type": "custom",
+        "filter": ["lowercase"]
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 package com.example.online.repository;
 
-import com.example.online.model.Post;
+import com.example.online.domain.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PostRepository extends JpaRepository<Post, Long> {

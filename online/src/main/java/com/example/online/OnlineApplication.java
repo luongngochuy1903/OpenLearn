@@ -13,14 +13,7 @@ public class OnlineApplication implements CommandLineRunner {
     private EntityManager em;
 
 	public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("./")
-                .filename(".env")
-                .load();
-        System.setProperty("app.jwt.secret", dotenv.get("SECRET_KEY"));
-
         SpringApplication.run(OnlineApplication.class, args);
-
 	}
     @Override
     public void run(String... args) {

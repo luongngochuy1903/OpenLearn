@@ -1,6 +1,6 @@
 package com.example.online.utils;
 
-import com.example.online.model.User;
+import com.example.online.domain.model.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
