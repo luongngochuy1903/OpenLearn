@@ -10,4 +10,6 @@ import java.util.List;
 public interface CourseModuleRepository extends JpaRepository<CourseModule, Long> {
     List<CourseModule> findUsersByCourseAndRole(Course course, ContributorRole role);
     List<CourseModule> findModulesByCourse(Course course);
+    boolean existsByModuleId(Long moduleId);
+    List<Long> findCourseIdsByModuleId(Long moduleId);
 }

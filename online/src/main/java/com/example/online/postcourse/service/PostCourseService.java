@@ -14,4 +14,7 @@ public interface PostCourseService {
     List<User> getRoleOfPost(Post post, ContributorRole role);
     List<Course> getCourseByPost(Post post);
     List<Post> getPostByUser(User user);
+    PostCourse findPostCourseByPostIdAndCourseId(Long postId, Long courseId);
+    void deletePostCourse(PostCourse postCourse);
+    boolean checkExistsByPostAndPost(Long postId, Long courseId);
 }

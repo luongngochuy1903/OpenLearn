@@ -1,0 +1,62 @@
+{
+  "properties": {
+    "courseId": { "type": "keyword" },
+
+    "courseName": {
+      "type": "text",
+      "analyzer": "text_analyzer",
+      "fields": {
+        "keyword": { "type": "keyword", "ignore_above": 256 }
+      }
+    },
+
+    "description": {
+      "type": "text",
+      "analyzer": "text_analyzer"
+    },
+
+    "tagName": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+
+    "updateAt": { "type": "date" },
+
+    "creatorName": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+    "creatorId": { "type": "keyword" },
+
+    "contributors": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+
+    "postId": {
+      "type": "keyword"
+    },
+
+    "postName": {
+      "type": "text",
+      "analyzer": "text_analyzer"
+    },
+
+    "modules": {
+      "type": "nested",
+      "properties": {
+        "moduleId": { "type": "keyword" },
+
+        "name": {
+          "type": "text",
+          "analyzer": "text_analyzer"
+        },
+
+        "description": {
+          "type": "text",
+          "analyzer": "text_analyzer"
+        }
+      }
+    }
+  }
+}

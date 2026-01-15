@@ -38,9 +38,8 @@ app:
   elasticsearch:
     url: ${ES_URI}
 
-logging:
-  level:
-    org.springframework.web: INFO
-    org.hibernate.SQL: INFO
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+#logging:
+#  level:
+#    org.springframework.web: INFO
+#    org.hibernate.SQL: INFO
 

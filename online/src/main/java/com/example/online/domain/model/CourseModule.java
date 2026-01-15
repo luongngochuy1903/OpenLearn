@@ -4,6 +4,8 @@ import com.example.online.enumerate.ContributorRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter        // sinh getter cho tất cả field
 @Setter
 @Builder
@@ -21,13 +23,17 @@ public class CourseModule {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "module_id", nullable = false)
+    @JoinColumn(name = "module_id")
     private Module module;
 
     @ManyToOne
-    @JoinColumn(name = "course_id")
+    @JoinColumn(name = "course_id", nullable = false)
     private Course course;
+
+    private Integer suggested;
 
     @Enumerated(EnumType.STRING)
     private ContributorRole role;
+
+    private LocalDateTime createdAt;
 }

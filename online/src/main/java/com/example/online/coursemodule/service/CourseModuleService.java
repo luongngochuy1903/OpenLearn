@@ -13,4 +13,6 @@ public interface CourseModuleService {
     CourseModule createCourseModule(User user, Module module, Course course);
     List<User> getRoleOfCourse(Course course, ContributorRole role);
     List<Module> getModulesByCourse(Course course);
+    List<Long> getCoursesIdByModule(Long moduleId);
+    boolean moduleExistsInAnyCourse(Long moduleId);
 }

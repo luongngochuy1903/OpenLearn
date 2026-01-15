@@ -10,6 +10,9 @@ import java.nio.charset.StandardCharsets;
 public class LoadingUtils {
     private static final Logger LOG = LoggerFactory.getLogger(LoadingUtils.class);
 
+    /*
+    Function: Load file from resource classpath
+     */
     public static String loadAsString(String filepath){
         try{
             ClassPathResource resource = new ClassPathResource(filepath);

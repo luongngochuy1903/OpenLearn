@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class PostCreateResponse {
     private Long postId;
     private String message;
+    private String url;
 }

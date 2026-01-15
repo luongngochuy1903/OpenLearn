@@ -1,59 +1,101 @@
 package com.example.online.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex, WebRequest request) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    private static final Logger LOG =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private String getOrigin(RuntimeException ex) {
+        StackTraceElement element = ex.getStackTrace()[0];
+        return element.getClassName() + "#" + element.getMethodName();
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(BadRequestException ex, WebRequest request) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    // ================= BUSINESS EXCEPTION =================
+    @ExceptionHandler({
+            ResourceNotFoundException.class,
+            BadRequestException.class,
+            UnauthorizedException.class,
+            ForbiddenException.class,
+            AccessDeniedException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleBusinessException(
+            RuntimeException ex, WebRequest request) {
+
+        HttpStatus status = resolveStatus(ex);
+        String origin = getOrigin(ex);
+
+        LOG.warn(
+                "Business exception: status={}, path={}, origin={}, message={}",
+                status.value(),
+                request.getDescription(false),
+                ex,
+                ex.getMessage()
+        );
+
+        return buildResponse(status, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex, WebRequest request) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
-    }
-
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex, WebRequest request) {
-        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
-    }
-
+    // ================= SYSTEM EXCEPTION =================
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex, WebRequest request) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
+    public ResponseEntity<Map<String, Object>> handleSystemException(
+            Exception ex, WebRequest request) {
+
+        LOG.error(
+                "System exception at path={}",
+                request.getDescription(false),
+                ex
+        );
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal server error",
+                request
+        );
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex, WebRequest request) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + " : " + error.getDefaultMessage())
-                .findFirst().orElse("Validation error");
-        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
+    // ================= HELPER =================
+    private HttpStatus resolveStatus(RuntimeException ex) {
+        if (ex instanceof ResourceNotFoundException) {
+            return HttpStatus.NOT_FOUND;
+        }
+        if (ex instanceof BadRequestException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        if (ex instanceof UnauthorizedException) {
+            return HttpStatus.UNAUTHORIZED;
+        }
+        if (ex instanceof ForbiddenException) {
+            return HttpStatus.FORBIDDEN;
+        }
+        if (ex instanceof AccessDeniedException){
+            return HttpStatus.FORBIDDEN;
+        }
+        return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message, WebRequest request) {
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status, String message, WebRequest request) {
+
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
         body.put("path", request.getDescription(false).replace("uri=", ""));
+
         return new ResponseEntity<>(body, status);
     }
 }

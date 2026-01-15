@@ -22,6 +22,4 @@ public class PostCreateRequest {
     private LocalDateTime updateAt;
     @NotNull(message = "Course cannot be empty")
     private List<CourseCreateRequest> courseCreateRequests;
-
-
 }

@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "postId": { "type": "keyword" },
+
+    "name": {
+      "type": "text",
+      "analyzer": "text_analyzer",
+      "fields": {
+        "keyword": { "type": "keyword", "ignore_above": 256 }
+      }
+    },
+
+    "contentMarkdown": {
+      "type": "text",
+      "analyzer": "text_analyzer"
+    },
+
+    "updateAt": { "type": "date" },
+
+    "creator": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+    "creatorId": { "type": "keyword" },
+
+    "contributors": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+
+    "communityName": {
+      "type": "keyword",
+      "normalizer": "lowercase_normalizer"
+    },
+    "communityId": { "type": "keyword" },
+
+    "courseIds": {
+      "type": "keyword"
+    }
+  }
+}

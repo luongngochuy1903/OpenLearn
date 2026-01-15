@@ -4,6 +4,7 @@ import com.example.online.lesson.dto.LessonCreateRequest;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.domain.model.Lesson;
 import com.example.online.domain.model.Module;
+import com.example.online.lesson.dto.LessonUpdateRequest;
 import com.example.online.repository.LessonRepository;
 import com.example.online.repository.ModuleRepository;
 import com.example.online.lesson.service.LessonService;
@@ -24,17 +25,25 @@ public class LessonServiceImpl implements LessonService {
                 .createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
     }
 
-
-    public Lesson createLesson(Long moduleId, LessonCreateRequest lessonCreateRequest){
-        Module module = moduleRepository.findById(moduleId).orElseThrow(() -> new ResourceNotFoundException("Module not found"));
-        return Lesson.builder().name(lessonCreateRequest.getName()).description(lessonCreateRequest.getDescription())
-                .module(module)
-                .contentURL(lessonCreateRequest.getContentUrl()).documentURL(lessonCreateRequest.getDocumentUrl())
-                .createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
+    public Lesson updateLesson(LessonUpdateRequest lessonUpdateRequest){
+        Lesson lesson = lessonRepository.findById(lessonUpdateRequest.getId()).orElseThrow(() -> new ResourceNotFoundException("Lesson not found"));
+        if (lessonUpdateRequest.getName() != null){
+            lesson.setName(lessonUpdateRequest.getName());
+        }
+        if (lessonUpdateRequest.getDescription() != null){
+            lesson.setDescription(lessonUpdateRequest.getDescription());
+        }
+        if (lessonUpdateRequest.getContentUrl() != null){
+            lesson.setContentURL(lessonUpdateRequest.getContentUrl());
+        }
+        if (lessonUpdateRequest.getDocumentUrl() != null){
+            lesson.setDocumentURL(lessonUpdateRequest.getDocumentUrl());
+        }
+        return saveLesson(lesson);
     }
 
-    public void saveLesson(Lesson lesson){
-        lessonRepository.save(lesson);
+    public Lesson saveLesson(Lesson lesson){
+        return lessonRepository.save(lesson);
     }
 
     public void deleteLesson(Long lessonId){

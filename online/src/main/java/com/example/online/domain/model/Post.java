@@ -24,6 +24,10 @@ public class Post {
     private LocalDateTime updateAt;
 
     @ManyToOne
+    @JoinColumn(name = "creator_id")
+    private User creator;
+
+    @ManyToOne
     @JoinColumn(name = "community_id")
     private Community community;
 

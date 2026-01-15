@@ -12,7 +12,6 @@ public class SecurityUtils {
             System.out.println("Cannot load this user: User unauthorized 400");
             return null;
         }
-
         return (User) authentication.getPrincipal();
     }
 }

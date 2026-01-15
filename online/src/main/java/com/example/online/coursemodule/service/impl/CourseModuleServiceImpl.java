@@ -38,12 +38,24 @@ public class CourseModuleServiceImpl implements CourseModuleService {
 
     public List<User> getRoleOfCourse(Course course, ContributorRole role){
         List<CourseModule> courseModules = courseModuleRepository.findUsersByCourseAndRole(course, role);
-        return courseModules.stream().map(courseModule -> courseModule.getUser()).toList();
+        return courseModules.stream().map(courseModule -> courseModule.getUser())
+                .filter(obj -> obj != null)
+                .toList();
     }
 
     public List<Module> getModulesByCourse(Course course){
         List<CourseModule> courseModules = courseModuleRepository.findModulesByCourse(course);
-        return courseModules.stream().map(courseModule -> courseModule.getModule()).toList();
+        return courseModules.stream().map(courseModule -> courseModule.getModule())
+                .filter(obj -> obj != null)
+                .toList();
+    }
+
+    public List<Long> getCoursesIdByModule(Long moduleId){
+        return courseModuleRepository.findCourseIdsByModuleId(moduleId);
+    }
+
+    public boolean moduleExistsInAnyCourse(Long moduleId){
+        return courseModuleRepository.existsByModuleId(moduleId);
     }
 
 }

@@ -1,10 +1,14 @@
 package com.example.online.authentication.jwt.service.impl;
 
+import com.example.online.authentication.authenticate.controller.AuthenticationController;
 import com.example.online.exception.ForbiddenException;
 import com.example.online.authentication.jwt.service.JwtService;
+import com.example.online.exception.UnauthorizedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import java.util.function.Function;
 public class JwtServiceImpl implements JwtService {
     @Value("${app.jwt.secret}")
     private String SECRET_KEY; // >= 32 ký tự
+    private static final Logger LOG = LoggerFactory.getLogger(JwtServiceImpl.class);
 
     @Override
     public String extractUsername(String token) {
@@ -68,11 +73,14 @@ public class JwtServiceImpl implements JwtService {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (ExpiredJwtException e) {
-            throw new ForbiddenException("Token đã hết hạn");
+            LOG.warn("Token expired!");
+            throw new UnauthorizedException("Token đã hết hạn");
         } catch (UnsupportedJwtException | MalformedJwtException e) {
-            throw new ForbiddenException("Token không hợp lệ");
+            LOG.warn("Token invalid!");
+            throw new UnauthorizedException("Token không hợp lệ");
         } catch (JwtException e) {
-            throw new ForbiddenException("Không thể xác thực token");
+            LOG.warn("Cannot validate Token somehow!");
+            throw new UnauthorizedException("Không thể xác thực token");
         }
     }
 

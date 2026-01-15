@@ -23,6 +23,10 @@ public class Course {
     private String name;
     private String description;
 
+    @ManyToOne
+    @JoinColumn(name = "creator_id")
+    private User creator;
+
     @ManyToMany
     @JoinTable(name = "course_tag", joinColumns = @JoinColumn(name = "course_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
@@ -32,6 +36,7 @@ public class Course {
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CourseModule> courseModules = new HashSet<>();
+
 
     private String commentURL;
     private LocalDateTime createdAt;

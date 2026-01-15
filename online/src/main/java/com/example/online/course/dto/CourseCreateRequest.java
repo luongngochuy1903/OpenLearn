@@ -24,6 +24,5 @@ public class CourseCreateRequest {
     private Set<TagRequest> tags;
     private LocalDateTime CreatedAt;
     private LocalDateTime updateAt;
-    @NotNull(message = "Module cannot be empty")
     private List<ModuleCreateRequest> moduleCreateRequests;
 }

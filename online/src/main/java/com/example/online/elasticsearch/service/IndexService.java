@@ -1,70 +1,45 @@
 package com.example.online.elasticsearch.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
-import com.example.online.exception.ResourceNotFoundException;
-import com.example.online.helper.Indices;
-import com.example.online.utils.LoadingUtils;
-import jakarta.annotation.PostConstruct;
+import com.example.online.exception.ElasticSearchIndexException;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.StringReader;
-import java.util.List;
-
-
 @Service
+@RequiredArgsConstructor
 public class IndexService {
-    private static final Logger LOG = LoggerFactory.getLogger(IndexService.class);
-    private static final List<String> indices = List.of(Indices.POST_INDEX);
     private final ElasticsearchClient client;
+    private static final Logger LOG = LoggerFactory.getLogger(IndexService.class);
 
-    public IndexService(ElasticsearchClient client){
-        this.client = client;
-    }
-
-    @PostConstruct
-    public void recreatingIndex(){
-        recreatingIndices();
-    }
-
-    public void recreatingIndices(){
+    /*
+    Function: Upsert new document for index
+     */
+    public <T> void upsertDocument(T document, String id, String indices){
         try{
-            String settings = LoadingUtils.loadAsString("static/es-settings.json");
-            if(settings == null){
-                LOG.error("Fail to load settings file");
-                throw new IllegalStateException("Cannot load Elasticsearch settings");
-            }
-
-            for(String indexName : indices){
-                ExistsRequest request = new ExistsRequest.Builder().index(indexName).build();
-                boolean exists = client.indices().exists(request).value();
-
-                if(exists){
-                    client.indices().delete(e -> e.index(indexName));
-                    LOG.info("Deleted index {}", indexName);
-                }
-
-                String mappings = loadMappings(indexName);
-                client.indices().create(i -> i.index(indexName)
-                        .mappings(m -> m.withJson(new StringReader(mappings)))
-                        .settings(s -> s.withJson(new StringReader(settings)))
-                );
-                LOG.info("Create index for {}", indexName);
-            }
+            client.index(i -> i.index(indices)
+                    .id(id).document(document)
+            );
         }
         catch (Exception e){
-            LOG.error("Fail when creating indices: {}", e.getMessage());
+            LOG.error("Something wrong when upserting document with id {} to index {}: {}", id,
+                    indices, e.getMessage());
+            throw new ElasticSearchIndexException("Failed to upsert document into Elasticsearch", e);
         }
     }
 
-    private String loadMappings(String indexName){
-        String path = LoadingUtils.loadAsString("static/mappings/" + indexName + ".json");
-        if(path == null){
-            LOG.error("Fail when loading mappings {}", indexName);
-            throw new ResourceNotFoundException("Mapping index not found!");
+    /*
+    Function: Delete document
+     */
+    public void deleteDocument(String id, String indices){
+        try{
+            client.delete(d -> d.index(indices).id(id));
         }
-        return path;
+        catch (Exception e){
+            LOG.error("Something wrong when deleting document with id {} of index {}: {}", id,
+                    indices, e.getMessage());
+            throw new ElasticSearchIndexException("Failed to delete document in Elasticsearch", e);
+        }
     }
 }

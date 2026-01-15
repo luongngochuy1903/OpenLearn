@@ -1,5 +1,7 @@
 package com.example.online.user.controller;
 
+import com.example.online.annotation.CurrentUser;
+import com.example.online.domain.model.User;
 import com.example.online.post.dto.PostGetResponse;
 import com.example.online.post.service.PostQueryService;
 import com.example.online.post.service.PostService;
@@ -18,7 +20,7 @@ import java.util.List;
 public class UserController {
     private final PostQueryService postQueryService;
     @GetMapping("/posts")
-    public ResponseEntity<List<PostGetResponse>> getMyPostDetail(){
-        return ResponseEntity.ok(postQueryService.viewMyPostDetail());
+    public ResponseEntity<List<PostGetResponse>> getMyPostDetail(@CurrentUser User user){
+        return ResponseEntity.ok(postQueryService.viewMyPostDetail(user));
     }
 }

@@ -4,6 +4,8 @@ import com.example.online.enumerate.CommunityRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter        // sinh getter cho tất cả field
 @Setter
 @Builder
@@ -29,4 +31,5 @@ public class CommunityMember {
 
     @Enumerated(EnumType.STRING)
     private CommunityRole role;
+
 }

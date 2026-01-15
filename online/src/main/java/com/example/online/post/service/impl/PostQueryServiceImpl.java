@@ -17,6 +17,7 @@ import com.example.online.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,8 +34,7 @@ public class PostQueryServiceImpl implements PostQueryService {
     belongs to or not and courses detached of this user
     Note: (Tree level ends at Course, does not response module and lesson)
      */
-    public List<PostGetResponse> viewMyPostDetail(){
-        var user = SecurityUtils.getCurrentUser();
+    public List<PostGetResponse> viewMyPostDetail(User user){
         if (user == null) {
             throw new UnauthorizedException("You need to login first");
         }
@@ -54,25 +54,29 @@ public class PostQueryServiceImpl implements PostQueryService {
         List<String> contributors_name = contributors.stream().map(user -> user.getLastName() + user.getFirstName()).toList();
         //Find course with post
         List<Course> courses = postCourseService.getCourseByPost(post);
-        List<CourseGetResponse> courseGetResponses = courses.stream().map(course -> {
-            Set<String> tags_name = course.getTags().stream().map(tag -> tag.getName()).collect(Collectors.toSet());
-            User courseCreator = courseModuleService.getRoleOfCourse(course, ContributorRole.CREATOR).get(0);
-            if (courseCreator.getLastName() == null || courseCreator.getFirstName() == null){
-                throw new ResourceNotFoundException("User name not found");
-            }
+        List<CourseGetResponse> courseGetResponses = new ArrayList<>();
+        if(!courses.isEmpty()) {
+                courseGetResponses = courses.stream().map(course -> {
+                Set<String> tags_name = course.getTags().stream().map(tag -> tag.getName()).collect(Collectors.toSet());
+                User courseCreator = courseModuleService.getRoleOfCourse(course, ContributorRole.CREATOR).get(0);
+                if (courseCreator.getLastName() == null || courseCreator.getFirstName() == null) {
+                    throw new ResourceNotFoundException("User name not found");
+                }
 
-            return CourseGetResponse.builder().id(course.getId()).courseName(course.getName())
-                    .creatorName(courseCreator.getFirstName() + " " + courseCreator.getLastName()).creatorId(courseCreator.getId())
-                    .description(course.getDescription()).tagName(tags_name).build();
-        }).toList();
+                return CourseGetResponse.builder().id(course.getId()).courseName(course.getName())
+                        .creatorName(courseCreator.getFirstName() + " " + courseCreator.getLastName()).creatorId(courseCreator.getId())
+                        .description(course.getDescription()).tagName(tags_name).build();
+            }).toList();
+        }
 
         // Find Community by Post
         Community community = post.getCommunity();
-        if (community == null){
-            throw new ResourceNotFoundException("Community not found!");
+        Long communityId = null;
+        String communityName = null;
+        if (community != null) {
+            communityName = community.getName();
+            communityId = community.getId();
         }
-        String communityName = community.getName();
-        Long communityId = community.getId();
 
         return PostGetResponse.builder().postId(post.getId()).name(post.getName())
                 .contentMarkdown(post.getContentMarkdown()).updateAt(post.getUpdateAt()).creatorId(creator.getId())
