@@ -1,5 +1,6 @@
 package com.example.online.annotation.aspect;
 
+import com.example.online.annotation.CheckCommunityMember;
 import com.example.online.annotation.CheckCommunityPostForMember;
 import com.example.online.community.service.CommunityMemberService;
 import com.example.online.domain.model.Post;
@@ -17,34 +18,33 @@ import org.springframework.stereotype.Component;
 @Component
 @Aspect
 @RequiredArgsConstructor
-public class CommunityContributePermissionAspect {
+public class CommunityMemberCheckAspect {
     private final CommunityMemberService communityMemberService;
-    private final PostRepository postRepository;
 
-    @Around("@annotation(checkCommunityPostForMember)")
+    @Around("@annotation(checkCommunityMember)")
     public Object checkCreator(
             ProceedingJoinPoint joinPoint,
-            CheckCommunityPostForMember checkCommunityPostForMember
+            CheckCommunityMember checkCommunityMember
     ) throws Throwable {
 
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         String[] paramNames = signature.getParameterNames();
         Object[] args = joinPoint.getArgs();
 
-        Long postId = null;
+        Long communityId = null;
         Object userObj = null;
 
         for (int i = 0; i < paramNames.length; i++) {
-            if (paramNames[i].equals(checkCommunityPostForMember.postIdParam())) {
-                postId = (Long) args[i];
+            if (paramNames[i].equals(checkCommunityMember.communityIdParam())) {
+                communityId = (Long) args[i];
             }
-            if (paramNames[i].equals(checkCommunityPostForMember.userParam())) {
+            if (paramNames[i].equals(checkCommunityMember.userParam())) {
                 userObj = args[i];
             }
         }
 
-        if (postId == null) {
-            throw new IllegalStateException("postId parameter not found");
+        if (communityId == null) {
+            throw new IllegalStateException("communityId parameter not found");
         }
         if (userObj == null) {
             throw new IllegalStateException("User parameter not found");
@@ -54,12 +54,9 @@ public class CommunityContributePermissionAspect {
             throw new IllegalStateException("User parameter must be of type User");
         }
 
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
-        if (post.getCommunity() != null) {
-            if (!communityMemberService.isMember(user.getId(), post.getCommunity().getId())) {
-                throw new AccessDeniedException(String
-                        .format("User %s is not in this community", user.getFirstName() + " " + user.getLastName()));
-            }
+        if (!communityMemberService.isMember(user.getId(), communityId)) {
+            throw new AccessDeniedException(String
+                    .format("User %s is not in this community", user.getFirstName() + " " + user.getLastName()));
         }
 
         return joinPoint.proceed();

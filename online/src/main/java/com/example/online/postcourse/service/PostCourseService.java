@@ -9,12 +9,12 @@ import com.example.online.domain.model.User;
 import java.util.List;
 
 public interface PostCourseService {
-    PostCourse createPostCourse(Post post, Course course, User user);
+    PostCourse createPostCourse(Post post, Course course, User user, ContributorRole role);
     void save(PostCourse postCourse);
     List<User> getRoleOfPost(Post post, ContributorRole role);
     List<Course> getCourseByPost(Post post);
     List<Post> getPostByUser(User user);
     PostCourse findPostCourseByPostIdAndCourseId(Long postId, Long courseId);
     void deletePostCourse(PostCourse postCourse);
-    boolean checkExistsByPostAndPost(Long postId, Long courseId);
+    boolean checkExistsByPostAndCourse(Long postId, Long courseId);
 }

@@ -10,9 +10,12 @@ import java.util.List;
 
 public interface CourseModuleService {
     void save (CourseModule courseModule);
-    CourseModule createCourseModule(User user, Module module, Course course);
+    CourseModule createCourseModule(User user, Module module, Course course, ContributorRole role);
     List<User> getRoleOfCourse(Course course, ContributorRole role);
     List<Module> getModulesByCourse(Course course);
     List<Long> getCoursesIdByModule(Long moduleId);
     boolean moduleExistsInAnyCourse(Long moduleId);
+    CourseModule findCourseModuleByCourseIdAndModuleId(Long courseId, Long moduleId);
+    void deleteCourseModule(CourseModule courseModule);
+    boolean checkExistsByCourseAndModule(Long courseId, Long moduleId);
 }

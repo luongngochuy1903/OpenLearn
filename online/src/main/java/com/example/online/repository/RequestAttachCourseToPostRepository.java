@@ -5,6 +5,8 @@ import com.example.online.domain.model.Post;
 import com.example.online.domain.model.RequestAttachCourseToPost;
 import com.example.online.domain.model.User;
 import com.example.online.enumerate.RequestStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -15,4 +17,5 @@ public interface RequestAttachCourseToPostRepository extends JpaRepository<Reque
     Optional<RequestAttachCourseToPost> findByUser(User user);
     Optional<RequestAttachCourseToPost> findByPost_IdAndCourse_Id(Long postId, Long courseId);
     Optional<RequestAttachCourseToPost> findByPost_IdAndCourse_IdAndStatus(Long postId, Long courseId, RequestStatus status);
+    Page<RequestAttachCourseToPost> findAllByPost_IdAndStatusAndCourseIsNotNull(Long postId, RequestStatus status, Pageable pageable);
 }

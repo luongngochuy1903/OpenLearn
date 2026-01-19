@@ -17,12 +17,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostCourseServiceImpl implements PostCourseService {
     private final PostCourseRepository postCourseRepository;
-    public PostCourse createPostCourse(Post post, Course course, User user){
+    public PostCourse createPostCourse(Post post, Course course, User user, ContributorRole role){
         PostCourse postCourse = PostCourse.builder()
                 .user(user)
                 .post(post)
                 .course(course)
-                .role(ContributorRole.CREATOR)
+                .role(role)
                 .build();
 
         post.getPostCourses().add(postCourse);
@@ -32,7 +32,7 @@ public class PostCourseServiceImpl implements PostCourseService {
         return postCourse;
     }
 
-    public boolean checkExistsByPostAndPost(Long postId, Long courseId){
+    public boolean checkExistsByPostAndCourse(Long postId, Long courseId){
         return postCourseRepository.existsByPost_IdAndCourse_Id(postId, courseId);
     }
 

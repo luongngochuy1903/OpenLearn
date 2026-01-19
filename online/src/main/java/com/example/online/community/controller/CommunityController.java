@@ -66,6 +66,7 @@ public class CommunityController {
         return ResponseEntity.ok("community deleted successfully");
     }
 
+    //==========================================================================
     // Role: Admin, User Use-case Role: User
     @PostMapping("/{communityId}/members/request")
     public ResponseEntity<String> sendJoiningCommunityRequest(@PathVariable Long communityId, @CurrentUser User user){
@@ -82,7 +83,7 @@ public class CommunityController {
     }
 
     // Role: Admin, User Use-case Role: Community Admin
-    @DeleteMapping("/{communityId}/members/{memberId}/declined")
+    @PostMapping("/{communityId}/members/{memberId}/declined")
     public ResponseEntity<String> declineMember(@PathVariable Long communityId, @PathVariable Long memberId, @CurrentUser User user){
         communityAdminService.declineCommunityMember(communityId, memberId, user);
         LOG.info("DELETE /api/v1/communities/{}/members/{}/declined - Body: Null", communityId, memberId);
@@ -95,6 +96,13 @@ public class CommunityController {
         communityAdminService.blockMember(communityId, memberId, user);
         LOG.info("POST /api/v1/communities/{}/members/{}/blocked - Body: Null", communityId, memberId);
         return ResponseEntity.ok().body(String.format("User with id %s is blocked from joining community!", memberId));
+    }
+
+    @DeleteMapping("/{communityId}/members/{memberId}/unblocked")
+    public ResponseEntity<String> unblockMember(@PathVariable Long communityId, @PathVariable Long memberId, @CurrentUser User user){
+        communityAdminService.removeBlockMember(communityId, memberId, user);
+        LOG.info("POST /api/v1/communities/{}/members/{}/unblocked - Body: Null", communityId, memberId);
+        return ResponseEntity.ok().body(String.format("User with id %s is unblocked from joining community!", memberId));
     }
 
     // Role: Admin, User Use-case Role: Community Admin

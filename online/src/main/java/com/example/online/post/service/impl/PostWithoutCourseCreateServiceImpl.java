@@ -1,5 +1,6 @@
 package com.example.online.post.service.impl;
 
+import com.example.online.annotation.CheckCommunityMember;
 import com.example.online.domain.model.Community;
 import com.example.online.domain.model.Post;
 import com.example.online.domain.model.PostCourse;
@@ -71,6 +72,7 @@ public class PostWithoutCourseCreateServiceImpl implements PostCreateService {
 
     @Override
     @Transactional
+    @CheckCommunityMember(communityIdParam = "communityId", userParam = "authUser")
     public Post createPost(Long communityId, PostCreateRequest postCreateRequest, User authUser) {
         if (authUser == null) {
             throw new UnauthorizedException("You need to login first");

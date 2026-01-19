@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface RequestJoiningCommunityRepository extends JpaRepository<RequestJoiningCommunity, Long> {
-    Optional<RequestJoiningCommunity> findByUser_IdAndCommunity_Id(Long userId, Long communityId);
+    Optional<RequestJoiningCommunity> findByUser_IdAndCommunity_IdAndStatus(Long userId, Long communityId, CommunityStatus status);
     Page<RequestJoiningCommunity> findByCommunityId(Long communityId, Pageable pageable);
     boolean existsByUser_IdAndStatus(Long userId, CommunityStatus status);
 }

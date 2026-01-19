@@ -15,4 +15,5 @@ public interface CommunityAdminService {
     Page<MemberRequestResponse> getRequestJoiningTable(Long communityId, Pageable pageable, User user);
     List<RequestJoiningCommunity> getAllRequestJoiningTable(Long communityId, User user);
     void blockMember(Long communityId, Long memberId, User user);
+    void removeBlockMember(Long communityId, Long memberId, User user);
 }

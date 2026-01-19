@@ -1,10 +1,9 @@
 package com.example.online.coursemodule.service.impl;
 
-import com.example.online.enumerate.ContributorRole;
-import com.example.online.domain.model.Course;
-import com.example.online.domain.model.CourseModule;
+import com.example.online.domain.model.*;
 import com.example.online.domain.model.Module;
-import com.example.online.domain.model.User;
+import com.example.online.enumerate.ContributorRole;
+import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.repository.CourseModuleRepository;
 import com.example.online.coursemodule.service.CourseModuleService;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +19,12 @@ public class CourseModuleServiceImpl implements CourseModuleService {
         courseModuleRepository.save(courseModule);
     }
 
-    public CourseModule createCourseModule(User user, Module module, Course course){
+    public CourseModule createCourseModule(User user, Module module, Course course, ContributorRole role){
         CourseModule courseModule = CourseModule.builder()
                 .user(user)
                 .module(module)
                 .course(course)
-                .role(ContributorRole.CREATOR)
+                .role(role)
                 .build();
 
         module.getCourseModules().add(courseModule);
@@ -34,6 +33,10 @@ public class CourseModuleServiceImpl implements CourseModuleService {
 
         save(courseModule);
         return courseModule;
+    }
+
+    public void deleteCourseModule(CourseModule courseModule){
+        courseModuleRepository.delete(courseModule);
     }
 
     public List<User> getRoleOfCourse(Course course, ContributorRole role){
@@ -50,6 +53,10 @@ public class CourseModuleServiceImpl implements CourseModuleService {
                 .toList();
     }
 
+    public boolean checkExistsByCourseAndModule(Long courseId, Long moduleId){
+        return courseModuleRepository.existsByCourse_IdAndModule_Id(courseId, moduleId);
+    }
+
     public List<Long> getCoursesIdByModule(Long moduleId){
         return courseModuleRepository.findCourseIdsByModuleId(moduleId);
     }
@@ -58,4 +65,8 @@ public class CourseModuleServiceImpl implements CourseModuleService {
         return courseModuleRepository.existsByModuleId(moduleId);
     }
 
+    public CourseModule findCourseModuleByCourseIdAndModuleId(Long courseId, Long moduleId){
+        return courseModuleRepository.findByCourse_IdAndModule_Id(courseId, moduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("This module is not attached to the course"));
+    }
 }

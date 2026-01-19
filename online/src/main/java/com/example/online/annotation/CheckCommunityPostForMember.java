@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CheckCommunityPostRole {
+public @interface CheckCommunityPostForMember {
     String postIdParam() default "postId";
     String userParam() default "user";
 }

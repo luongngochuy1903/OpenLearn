@@ -6,6 +6,7 @@ import com.example.online.domain.model.User;
 import com.example.online.post.dto.PostCreateRequest;
 import com.example.online.post.dto.PostGetResponse;
 import com.example.online.post.dto.PostUpdateRequest;
+import com.example.online.post.dto.RequestAttachResponse;
 import com.example.online.post.enumerate.PostCreateType;
 import com.example.online.post.factory.PostCreateFactory;
 import com.example.online.post.service.PostContributeService;
@@ -13,6 +14,8 @@ import com.example.online.post.service.PostQueryService;
 import com.example.online.post.service.PostService;
 import com.example.online.postcourse.dto.PostCreateResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +39,14 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(postCreateResponse);
     }
 
+    // Role: User, Use-case Role: Post Creator
     @DeleteMapping("/{postId}")
     public ResponseEntity<String> deletePost(@PathVariable Long postId, @CurrentUser User authUser){
         postService.deletePost(postId, authUser);
         return ResponseEntity.ok("Delete post successfully");
     }
 
+    // Role: User, Use-case Role: Post Creator
     @PutMapping("/{postId}")
     public ResponseEntity<PostCreateResponse> updateMyPost(@PathVariable Long postId,
                                                            @RequestBody PostUpdateRequest postUpdateRequest,
@@ -58,6 +63,15 @@ public class PostController {
     }
 
     //=============================== For contributor API groups ==================================
+    // Role: User, Use-case Role: Post Creator
+    @GetMapping("/{postId}/attach")
+    public ResponseEntity<Page<RequestAttachResponse>> getRequestAttachingList(@PathVariable Long postId,
+                                                                               @CurrentUser User user,
+                                                                               Pageable pageable){
+        return ResponseEntity.ok(postContributeService.getRequestAttach(postId, user, pageable));
+    }
+
+    // Role: User
     @PostMapping("/{postId}/course/{courseId}/attach")
     public ResponseEntity<String> requestToAttachCourseToPost(@PathVariable Long postId,
                                                               @PathVariable Long courseId,
@@ -66,14 +80,17 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Send request to attach this course successfully");
     }
 
-    @PostMapping("/{postId}/course/{courseId}/attach/approved")
+    // Role: User, Use-case Role: Post Creator
+    @PostMapping("/{postId}/course/{courseId}/user/{targetManId}/attach/approved")
     public ResponseEntity<String> approveCourseRequest(@PathVariable Long postId,
-                                                              @PathVariable Long courseId,
-                                                              @CurrentUser User user){
-        postContributeService.approveCourseToPost(postId, courseId, user);
+                                                       @PathVariable Long courseId,
+                                                       @PathVariable Long targetManId,
+                                                       @CurrentUser User user){
+        postContributeService.approveCourseToPost(postId, courseId, user, targetManId);
         return ResponseEntity.status(HttpStatus.CREATED).body("Accept request to attach this course successfully");
     }
 
+    // Role: User, Use-case Role: Post Creator
     @PostMapping("/{postId}/course/{courseId}/attach/declined")
     public ResponseEntity<String> declineCourseRequest(@PathVariable Long postId,
                                                        @PathVariable Long courseId,
@@ -83,7 +100,26 @@ public class PostController {
         return ResponseEntity.ok().body("Decline request to attach this course successfully");
     }
 
-    @PostMapping("/{postId}/course/{courseId}/remove")
+    // Role: User, Use-case Role: Post Creator
+    @PostMapping("/{postId}/user/{targetManId}/banned")
+    public ResponseEntity<String> banUserFromAttachingCourse(@PathVariable Long postId,
+                                                       @PathVariable Long targetManId,
+                                                       @CurrentUser User user){
+        postContributeService.banThisUserToContribute(postId, targetManId, user);
+        return ResponseEntity.ok().body("This user has been banned from contributing your post");
+    }
+
+    // Role: User, Use-case Role: Post Creator
+    @DeleteMapping("/{postId}/user/{targetManId}/unbanned")
+    public ResponseEntity<String> unbanUserFromAttachingCourse(@PathVariable Long postId,
+                                                             @PathVariable Long targetManId,
+                                                             @CurrentUser User user){
+        postContributeService.removeBan(postId, targetManId, user);
+        return ResponseEntity.ok().body("This user has been unbanned from contributing your post");
+    }
+
+    // Role: User, Use-case Role: Post Creator
+    @DeleteMapping("/{postId}/course/{courseId}/remove")
     public ResponseEntity<String> removeCourseFromPost(@PathVariable Long postId,
                                                               @PathVariable Long courseId,
                                                               @CurrentUser User user){

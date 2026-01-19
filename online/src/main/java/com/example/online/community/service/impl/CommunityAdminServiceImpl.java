@@ -9,12 +9,14 @@ import com.example.online.domain.model.Community;
 import com.example.online.domain.model.CommunityMember;
 import com.example.online.domain.model.RequestJoiningCommunity;
 import com.example.online.domain.model.User;
+import com.example.online.enumerate.BanType;
 import com.example.online.enumerate.CommunityRole;
 import com.example.online.enumerate.CommunityStatus;
 import com.example.online.exception.BadRequestException;
 import com.example.online.exception.UnauthorizedException;
 import com.example.online.repository.RequestJoiningCommunityRepository;
 import com.example.online.user.service.UserService;
+import com.example.online.utils.BanUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ public class CommunityAdminServiceImpl implements CommunityAdminService {
     private final CommunityService communityService;
     private final CommunityMemberService communityMemberService;
     private final RequestJoiningCommunityRepository requestJoiningCommunityRepository;
+    private final BanUtils banUtils;
     private static final Logger LOG = LoggerFactory.getLogger(CommunityAdminServiceImpl.class);
     /*
         Function: Add member to community
@@ -46,21 +49,20 @@ public class CommunityAdminServiceImpl implements CommunityAdminService {
             throw new BadRequestException("memberId could not be null");
         }
 
-        RequestJoiningCommunity requestJoiningCommunity = requestJoiningCommunityRepository
-                .findByUser_IdAndCommunity_Id(memberId, communityId).orElse(null);
-        if (requestJoiningCommunity == null || requestJoiningCommunity.getStatus().equals(CommunityStatus.BLOCK)){
-            LOG.info("User {} cannot be added to community {} by {}", memberId, communityId, user.getEmail());
-            return null;
+        if (banUtils.checkUserBan(memberId, BanType.COMMUNITY, communityId)) {
+            throw new BadRequestException(String.format("User %s has been banned from this action", user.getFirstName() + " " + user.getLastName()));
         }
 
+        RequestJoiningCommunity requestJoiningCommunity = requestJoiningCommunityRepository
+                .findByUser_IdAndCommunity_IdAndStatus(memberId, communityId, CommunityStatus.JOINING_PENDING).orElseThrow(() -> new BadRequestException("Request not found!"));
+
         var member = userService.findUserById(memberId);
-        Community community = communityService.getCommunity(communityId);
-        CommunityMember communityMember = CommunityMember.builder().community(community)
+        CommunityMember communityMember = CommunityMember.builder().community(requestJoiningCommunity.getCommunity())
                 .user(member).role(CommunityRole.MEMBER).starContribute(0.0).build();
 
         communityMemberService.save(communityMember);
         requestJoiningCommunityRepository.delete(requestJoiningCommunity);
-        LOG.info("User {} is added to community {} - {} by {}", member.getEmail(), community.getId(), community.getName(), user.getEmail());
+        LOG.info("User {} is added to community {} - {} by {}", member.getEmail(), requestJoiningCommunity.getCommunity().getId(), requestJoiningCommunity.getCommunity().getName(), user.getEmail());
         return communityMember;
     }
 
@@ -78,7 +80,7 @@ public class CommunityAdminServiceImpl implements CommunityAdminService {
             throw new BadRequestException("memberId could not be null");
         }
         RequestJoiningCommunity requestJoiningCommunity = requestJoiningCommunityRepository
-                .findByUser_IdAndCommunity_Id(memberId, communityId).orElseThrow(() -> new BadRequestException("There are something wrong! Try again later"));
+                .findByUser_IdAndCommunity_IdAndStatus(memberId, communityId, CommunityStatus.JOINING_PENDING).orElseThrow(() -> new BadRequestException("There are something wrong! Try again later"));
 
         requestJoiningCommunityRepository.delete(requestJoiningCommunity);
     }
@@ -89,18 +91,26 @@ public class CommunityAdminServiceImpl implements CommunityAdminService {
      */
     @CheckCommunityAdmin(communityIdParam = "communityId", userParam = "user")
     public void blockMember(Long communityId, Long memberId, User user){
-        if (user == null) {
-            throw new UnauthorizedException("You need to login first");
+        if (memberId == null){
+            throw new BadRequestException("courseId could not be null");
         }
 
-        if(memberId == null){
+        banUtils.addBanRecord(memberId, BanType.COMMUNITY, communityId);
+
+        LOG.info("{} banned user with id {} from his/her community {}", user.getFirstName() + " " + user.getLastName(),
+                memberId, communityId);
+    }
+
+    @CheckCommunityAdmin(communityIdParam = "communityId", userParam = "user")
+    public void removeBlockMember(Long communityId, Long memberId, User user){
+        if (memberId == null){
             throw new BadRequestException("memberId could not be null");
         }
-        RequestJoiningCommunity requestJoiningCommunity = requestJoiningCommunityRepository
-                .findByUser_IdAndCommunity_Id(memberId, communityId).orElseThrow(() -> new BadRequestException("There are something wrong! Try again later"));
 
-        requestJoiningCommunity.setStatus(CommunityStatus.BLOCK);
-        requestJoiningCommunityRepository.save(requestJoiningCommunity);
+        banUtils.removeBanRecord(memberId, BanType.COMMUNITY , communityId);
+
+        LOG.info("{} unbanned user with id {} from his/her community {}", user.getFirstName() + " " + user.getLastName(),
+                memberId, communityId);
     }
 
     @CheckCommunityAdmin(communityIdParam = "communityId", userParam = "user")

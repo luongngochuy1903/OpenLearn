@@ -73,11 +73,11 @@ public class CourseServiceImpl implements CourseService {
         if (!coursesReq.getModuleCreateRequests().isEmpty()) {
             for (var moduleReq : coursesReq.getModuleCreateRequests()) {
                 Module module = moduleService.createModule(moduleReq, user);
-                courseModuleService.createCourseModule(user, module, course);
+                courseModuleService.createCourseModule(user, module, course, ContributorRole.CREATOR);
             }
         }
         else {
-            courseModuleService.createCourseModule(user, null, course);
+            courseModuleService.createCourseModule(user, null, course, ContributorRole.CREATOR);
         }
         System.out.println("Test coi course có trường gì: " + course.getCourseModules().size());
         LOG.info("User {} created course id {} - {}", user.getEmail(), course.getId(), course.getName());

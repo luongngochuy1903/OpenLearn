@@ -1,10 +1,13 @@
 package com.example.online.post.service.impl;
 
+import com.example.online.annotation.CheckCommunityMember;
+import com.example.online.annotation.CheckCommunityPostForMember;
 import com.example.online.course.service.CourseService;
 import com.example.online.domain.model.Community;
 import com.example.online.domain.model.Course;
 import com.example.online.domain.model.Post;
 import com.example.online.domain.model.User;
+import com.example.online.enumerate.ContributorRole;
 import com.example.online.event.PostChangedEvent;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.exception.UnauthorizedException;
@@ -64,7 +67,7 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
                 // Tạo course
                 Course course = courseService.createCourse(courseReq, authUser);
                 courseService.saveCourse(course);
-                postCourseService.createPostCourse(post, course, user);
+                postCourseService.createPostCourse(post, course, user, ContributorRole.CREATOR);
             }
             System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
             publisher.publishEvent(new PostChangedEvent(post.getId()));
@@ -73,6 +76,7 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
 
     @Override
     @Transactional
+    @CheckCommunityMember(communityIdParam = "communityId", userParam = "authUser")
     public Post createPost(Long communityId, PostCreateRequest postCreateRequest, User authUser) {
         if (authUser == null) {
             throw new UnauthorizedException("You need to login first");
@@ -97,7 +101,7 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
             // Tạo course
             Course course = courseService.createCourse(courseReq, authUser);
             courseService.saveCourse(course);
-            postCourseService.createPostCourse(post, course, user);
+            postCourseService.createPostCourse(post, course, user, ContributorRole.CREATOR);
         }
         System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
         publisher.publishEvent(new PostChangedEvent(post.getId()));

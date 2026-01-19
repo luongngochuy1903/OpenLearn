@@ -6,14 +6,14 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
+@Getter        // sinh getter cho tất cả field
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "request_course_to_post")
-public class RequestAttachCourseToPost {
+@Table(name = "request_module_to_course")
+public class RequestAttachModuleToCourse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,8 +30,8 @@ public class RequestAttachCourseToPost {
     private Course course;
 
     @ManyToOne
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @JoinColumn(name = "module_id", nullable = false)
+    private Module module;
 
     @ManyToOne
     @JoinColumn(name = "reviewer_id")
