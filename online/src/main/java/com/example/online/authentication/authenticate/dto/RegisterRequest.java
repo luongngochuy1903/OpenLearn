@@ -17,4 +17,6 @@ public class RegisterRequest {
     private String email;
     @NotNull(message = "Password cannot be empty")
     private String password;
+
+    private String objectKey;
 }

@@ -12,8 +12,11 @@ import com.example.online.post.factory.PostCreateFactory;
 import com.example.online.post.service.PostContributeService;
 import com.example.online.post.service.PostQueryService;
 import com.example.online.post.service.PostService;
+import com.example.online.post.service.impl.PostContributeServiceImpl;
 import com.example.online.postcourse.dto.PostCreateResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -28,6 +31,7 @@ public class PostController {
     private final PostService postService;
     private final PostCreateFactory postCreateFactory;
     private final PostContributeService postContributeService;
+    private static final Logger LOG = LoggerFactory.getLogger(PostController.class);
 
     @PostMapping("/{types}")
     public ResponseEntity<PostCreateResponse> createPost(@PathVariable("types") PostCreateType postCreateType,

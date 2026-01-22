@@ -30,6 +30,7 @@ public class S3Config {
                 .build();
     }
 
+    @Bean
     public S3Presigner s3Presigner(){
         Region awsRegion = Region.of(region);
         return S3Presigner.builder()

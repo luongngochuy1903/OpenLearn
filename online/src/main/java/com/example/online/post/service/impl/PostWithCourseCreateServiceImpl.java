@@ -3,11 +3,12 @@ package com.example.online.post.service.impl;
 import com.example.online.annotation.CheckCommunityMember;
 import com.example.online.annotation.CheckCommunityPostForMember;
 import com.example.online.course.service.CourseService;
-import com.example.online.domain.model.Community;
-import com.example.online.domain.model.Course;
-import com.example.online.domain.model.Post;
-import com.example.online.domain.model.User;
+import com.example.online.document.factory.DocumentGenerateFactory;
+import com.example.online.document.service.DocumentService;
+import com.example.online.document.service.PostDocumentService;
+import com.example.online.domain.model.*;
 import com.example.online.enumerate.ContributorRole;
+import com.example.online.enumerate.DocumentOf;
 import com.example.online.event.PostChangedEvent;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.exception.UnauthorizedException;
@@ -34,6 +35,7 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
     private final CommunityRepository communityRepository;
     private final CourseService courseService;
     private final PostCourseService postCourseService;
+    private final DocumentGenerateFactory documentGenerateFactory;
     private final ApplicationEventPublisher publisher;
 
     @Override
@@ -69,6 +71,12 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
                 courseService.saveCourse(course);
                 postCourseService.createPostCourse(post, course, user, ContributorRole.CREATOR);
             }
+
+            // Tạo relation cho document
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+            for (var documentReq : postCreateRequest.getDocs()) {
+                documentService.createDocument(post, documentReq);
+            }
             System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
             publisher.publishEvent(new PostChangedEvent(post.getId()));
             return post;
@@ -102,6 +110,12 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
             Course course = courseService.createCourse(courseReq, authUser);
             courseService.saveCourse(course);
             postCourseService.createPostCourse(post, course, user, ContributorRole.CREATOR);
+        }
+
+        //Tạo document cho post
+        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+        for (var documentReq : postCreateRequest.getDocs()) {
+            documentService.createDocument(post, documentReq);
         }
         System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
         publisher.publishEvent(new PostChangedEvent(post.getId()));

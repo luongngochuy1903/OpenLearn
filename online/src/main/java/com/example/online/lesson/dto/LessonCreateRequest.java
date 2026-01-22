@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,9 +17,9 @@ public class LessonCreateRequest {
     @NotNull(message = "Lesson name cannot be empty")
     private String name;
     private String description;
-    private String documentUrl;
+    private List<String> objectKey;
     @NotNull(message = "content cannot be empty")
-    private String contentUrl;
+    private String contentMarkdown;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
 }

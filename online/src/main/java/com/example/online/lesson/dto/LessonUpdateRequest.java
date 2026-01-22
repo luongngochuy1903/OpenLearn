@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,6 +15,6 @@ public class LessonUpdateRequest {
     private Long id;
     private String name;
     private String description;
-    private String documentUrl;
-    private String contentUrl;
+    private List<String> objectKey;
+    private String contentMarkdown;
 }

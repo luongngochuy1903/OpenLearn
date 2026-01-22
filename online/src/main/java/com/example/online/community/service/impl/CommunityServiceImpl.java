@@ -80,6 +80,7 @@ public class CommunityServiceImpl implements CommunityService {
         if (communityCreateRequest.getDescription() != null){
             community.setDescription(communityCreateRequest.getDescription());
         }
+        //Sửa hàm này bằng cách hiện tag id để tránh find theo Name
         Set<Tag> communityTags = tagService.resolveTags(communityCreateRequest.getTags());
         community.setTags(communityTags);
         LOG.info("User {} updated community {} - {}", user.getEmail(), community.getId(), community.getName());

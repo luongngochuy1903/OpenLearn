@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter        // sinh getter cho tất cả field
@@ -23,6 +24,9 @@ public class Post {
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostDocument> documentURL;
+
     @ManyToOne
     @JoinColumn(name = "creator_id")
     private User creator;
@@ -33,4 +37,5 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private Set<PostCourse> postCourses = new HashSet<>();
+
 }
