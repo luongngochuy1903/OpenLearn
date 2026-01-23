@@ -35,6 +35,8 @@ public class PostServiceImpl implements PostService {
         }
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post not found !"));
         postRepository.delete(post);
+        //check coi bảng document có bị xóa cascade không
+
         publisher.publishEvent(new PostChangedEvent(postId));
         //Thêm xóa comment related
     }

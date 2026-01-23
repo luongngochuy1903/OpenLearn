@@ -78,6 +78,8 @@ public class PostQueryServiceImpl implements PostQueryService {
             communityId = community.getId();
         }
 
+
+
         return PostGetResponse.builder().postId(post.getId()).name(post.getName())
                 .contentMarkdown(post.getContentMarkdown()).updateAt(post.getUpdateAt()).creatorId(creator.getId())
                 .creator(creator.getFirstName() + " " + creator.getLastName()).contributors(contributors_name)

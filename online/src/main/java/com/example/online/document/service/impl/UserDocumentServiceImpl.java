@@ -2,8 +2,6 @@ package com.example.online.document.service.impl;
 
 import com.example.online.document.dto.DocumentRequestDTO;
 import com.example.online.document.service.DocumentService;
-import com.example.online.domain.model.Lesson;
-import com.example.online.domain.model.LessonDocument;
 import com.example.online.domain.model.User;
 import com.example.online.domain.model.UserDocument;
 import com.example.online.enumerate.DocumentOf;
@@ -13,6 +11,7 @@ import com.example.online.repository.UserDocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,7 +43,7 @@ public class UserDocumentServiceImpl implements DocumentService {
         LOG.info("Documents {} are created", docs);
         return docs.stream()
                 .map(req ->
-                        userDocumentRepository.findById(req.getId())
+                        userDocumentRepository.findByUrl(req.getObjectKey())
                                 .orElseGet(() -> userDocumentRepository.save(
                                         UserDocument.builder().url(req.getObjectKey())
                                                 .type(req.getType())

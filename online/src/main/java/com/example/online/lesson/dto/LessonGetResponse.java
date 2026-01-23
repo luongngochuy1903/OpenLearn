@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -15,8 +16,7 @@ public class LessonGetResponse {
     private Long lessonId;
     private String name;
     private String description;
-    private String documentURL;
-    private String contentURL;
+    private String contentMarkdown;
     private LocalDateTime updateAt;
 
 }

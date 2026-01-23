@@ -1,9 +1,12 @@
 package com.example.online.authentication.authenticate.dto;
 
+import com.example.online.document.dto.DocumentRequestDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -18,5 +21,5 @@ public class RegisterRequest {
     @NotNull(message = "Password cannot be empty")
     private String password;
 
-    private String objectKey;
+    private List<DocumentRequestDTO> docs;
 }

@@ -1,13 +1,13 @@
 package com.example.online.authentication.authenticate.service.impl;
-
-import com.example.online.authentication.authenticate.controller.AuthenticationController;
 import com.example.online.authentication.authenticate.service.AuthenticationService;
 
 import com.example.online.authentication.authenticate.dto.AuthenticationRequest;
 import com.example.online.authentication.authenticate.dto.AuthenticationResponse;
 import com.example.online.authentication.authenticate.dto.RegisterRequest;
 import com.example.online.authentication.authenticate.dto.RegisterResponse;
-import com.example.online.elasticsearch.service.IndexService;
+import com.example.online.document.factory.DocumentGenerateFactory;
+import com.example.online.document.service.DocumentService;
+import com.example.online.enumerate.DocumentOf;
 import com.example.online.enumerate.Role;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.domain.model.User;
@@ -30,6 +30,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final DocumentGenerateFactory documentGenerateFactory;
     private final JwtService jwtService;
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
@@ -51,15 +52,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     public RegisterResponse register(RegisterRequest registerRequest) {
+        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.USER);
         var user = User.builder()
                 .firstName(registerRequest.getFirstName())
                 .lastName(registerRequest.getLastName())
                 .email(registerRequest.getEmail())
-                .documentURL(registerRequest.getObjectKey())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .role(Role.USER)
                 .build();
         userRepository.save(user);
+        for (var documentReq : registerRequest.getDocs()) {
+            documentService.createDocument(user, documentReq);
+        }
         LOG.info("User {} register with info: fullName {}, role: {}", user.getEmail(), user.getLastName() + " " + user.getFirstName(), user.getRole());
         return RegisterResponse.builder()
                 .firstName(user.getFirstName())

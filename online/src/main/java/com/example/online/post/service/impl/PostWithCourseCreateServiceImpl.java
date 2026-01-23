@@ -5,7 +5,6 @@ import com.example.online.annotation.CheckCommunityPostForMember;
 import com.example.online.course.service.CourseService;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
-import com.example.online.document.service.PostDocumentService;
 import com.example.online.domain.model.*;
 import com.example.online.enumerate.ContributorRole;
 import com.example.online.enumerate.DocumentOf;

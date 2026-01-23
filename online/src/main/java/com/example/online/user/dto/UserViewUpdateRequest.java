@@ -1,4 +1,4 @@
-package com.example.online.lesson.dto;
+package com.example.online.user.dto;
 
 import com.example.online.document.dto.DocumentRequestDTO;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LessonUpdateRequest {
-    private Long id;
-    private String name;
-    private String description;
+public class UserViewUpdateRequest {
+    private String firstName;
+    private String lastName;
     private List<DocumentRequestDTO> docs;
-    private String contentMarkdown;
 }
