@@ -9,6 +9,7 @@ import com.example.online.domain.model.PostDocument;
 import com.example.online.domain.model.User;
 import com.example.online.enumerate.DocumentOf;
 import com.example.online.event.PostChangedEvent;
+import com.example.online.event.PostDeletedEvent;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.exception.UnauthorizedException;
 import com.example.online.post.dto.PostUpdateRequest;
@@ -17,6 +18,7 @@ import com.example.online.repository.PostRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +30,7 @@ public class PostServiceImpl implements PostService {
     private final DocumentGenerateFactory documentGenerateFactory;
     private final ApplicationEventPublisher publisher;
 
+    @Transactional
     @CheckPostCreator(postIdParam = "postId", userParam = "user")
     public void deletePost(Long postId, User user){
         if (user == null) {
@@ -37,7 +40,7 @@ public class PostServiceImpl implements PostService {
         postRepository.delete(post);
         //check coi bảng document có bị xóa cascade không
 
-        publisher.publishEvent(new PostChangedEvent(postId));
+        publisher.publishEvent(new PostDeletedEvent(postId));
         //Thêm xóa comment related
     }
 
@@ -55,12 +58,24 @@ public class PostServiceImpl implements PostService {
         if(postUpdateRequest.getContentMarkdown() != null){
             post.setContentMarkdown(postUpdateRequest.getContentMarkdown());
         }
-        if (postUpdateRequest.getDocs() != null && !postUpdateRequest.getDocs().isEmpty()){
+        if (postUpdateRequest.getAddDocs() != null && !postUpdateRequest.getAddDocs().isEmpty()){
             DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
-            List<?> results = documentService.resolveDocument(postUpdateRequest.getDocs());
+            List<?> results = documentService.resolveDocument(postUpdateRequest.getAddDocs(), authUser);
             @SuppressWarnings("unchecked")
-            List<PostDocument> lessonDocs = (List<PostDocument>) results;
-            post.setDocumentURL(lessonDocs);
+            List<PostDocument> postDocs = (List<PostDocument>) results;
+            for (var doc : postDocs){
+                post.getDocumentURL().add(doc);
+            }
+        }
+
+        if (postUpdateRequest.getRemoveDocs() != null && !postUpdateRequest.getRemoveDocs().isEmpty()){
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+            List<?> results = documentService.resolveDocument(postUpdateRequest.getRemoveDocs(), authUser);
+            @SuppressWarnings("unchecked")
+            List<PostDocument> postDocs = (List<PostDocument>) results;
+            for (var doc : postDocs){
+                post.getDocumentURL().remove(doc);
+            }
         }
         post.setUpdateAt(LocalDateTime.now());
         Post savedPost = postRepository.save(post);

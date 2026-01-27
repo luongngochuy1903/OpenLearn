@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 @Service("PostWithoutCourseCreateServiceImpl")
@@ -58,6 +59,7 @@ public class PostWithoutCourseCreateServiceImpl implements PostCreateService {
                 .contentMarkdown(postCreateRequest.getContentMarkdown())
                 .createdAt(LocalDateTime.now())
                 .creator(user)
+                .documentURL(new ArrayList<>())
                 .updateAt(LocalDateTime.now())
                 .postCourses(new HashSet<>())
                 .build();
@@ -71,9 +73,11 @@ public class PostWithoutCourseCreateServiceImpl implements PostCreateService {
         postCourseService.save(postCourse);
 
         //Tạo document cho post
-        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
-        for (var documentReq : postCreateRequest.getDocs()) {
-            documentService.createDocument(post, documentReq);
+        if (postCreateRequest.getDocs() != null && !postCreateRequest.getDocs().isEmpty()) {
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+            for (var documentReq : postCreateRequest.getDocs()) {
+                documentService.createDocument(post, documentReq);
+            }
         }
 
         System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
@@ -98,6 +102,7 @@ public class PostWithoutCourseCreateServiceImpl implements PostCreateService {
                 .createdAt(LocalDateTime.now())
                 .community(community)
                 .creator(user)
+                .documentURL(new ArrayList<>())
                 .updateAt(LocalDateTime.now())
                 .postCourses(new HashSet<>())
                 .build();
@@ -111,9 +116,11 @@ public class PostWithoutCourseCreateServiceImpl implements PostCreateService {
         postCourseService.save(postCourse);
 
         //Tạo document cho post
-        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
-        for (var documentReq : postCreateRequest.getDocs()) {
-            documentService.createDocument(post, documentReq);
+        if (postCreateRequest.getDocs() != null && !postCreateRequest.getDocs().isEmpty()) {
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+            for (var documentReq : postCreateRequest.getDocs()) {
+                documentService.createDocument(post, documentReq);
+            }
         }
 
         System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());

@@ -15,5 +15,6 @@ import java.util.List;
 public class UserViewUpdateRequest {
     private String firstName;
     private String lastName;
-    private List<DocumentRequestDTO> docs;
+    private List<DocumentRequestDTO> addDocs;
+    private List<DocumentRequestDTO> removeDocs;
 }

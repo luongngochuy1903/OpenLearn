@@ -3,6 +3,8 @@ package com.example.online.lesson.service.impl;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
 import com.example.online.domain.model.LessonDocument;
+import com.example.online.domain.model.Module;
+import com.example.online.domain.model.PostDocument;
 import com.example.online.enumerate.DocumentOf;
 import com.example.online.lesson.dto.LessonCreateRequest;
 import com.example.online.exception.ResourceNotFoundException;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,16 +28,20 @@ public class LessonServiceImpl implements LessonService {
     private final DocumentGenerateFactory documentGenerateFactory;
 
     @Transactional
-    public Lesson createLesson(LessonCreateRequest lessonCreateRequest){
+    public Lesson createLesson(LessonCreateRequest lessonCreateRequest, Module module){
 
         Lesson lesson = Lesson.builder().name(lessonCreateRequest.getName()).description(lessonCreateRequest.getDescription())
                 .contentMarkdown(lessonCreateRequest.getContentMarkdown())
+                .documentURL(new ArrayList<>())
+                .module(module)
                 .createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
 
         saveLesson(lesson);
-        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.LESSON);
-        for (var documentReq : lessonCreateRequest.getDocs()) {
-            documentService.createDocument(lesson, documentReq);
+        if (lessonCreateRequest.getDocs() != null && !lessonCreateRequest.getDocs().isEmpty()) {
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.LESSON);
+            for (var documentReq : lessonCreateRequest.getDocs()) {
+                documentService.createDocument(lesson, documentReq);
+            }
         }
         return lesson;
     }
@@ -49,10 +57,22 @@ public class LessonServiceImpl implements LessonService {
         if (lessonUpdateRequest.getContentMarkdown() != null){
             lesson.setContentMarkdown(lessonUpdateRequest.getContentMarkdown());
         }
-        if (lessonUpdateRequest.getDocs() != null){
+        if (lessonUpdateRequest.getAddDocs() != null && !lessonUpdateRequest.getAddDocs().isEmpty()){
             DocumentService documentService = documentGenerateFactory.getService(DocumentOf.LESSON);
-            for (var documentReq : lessonUpdateRequest.getDocs()) {
-                documentService.createDocument(lesson, documentReq);
+            List<?> results = documentService.resolveDocument(lessonUpdateRequest.getAddDocs(), lesson.getModule().getCreator());
+            @SuppressWarnings("unchecked")
+            List<LessonDocument> lessonDocs = (List<LessonDocument>) results;
+            for (var doc : lessonDocs){
+                lesson.getDocumentURL().add(doc);
+            }
+        }
+        if (lessonUpdateRequest.getRemoveDocs() != null && !lessonUpdateRequest.getRemoveDocs().isEmpty()){
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.LESSON);
+            List<?> results = documentService.resolveDocument(lessonUpdateRequest.getRemoveDocs(), lesson.getModule().getCreator());
+            @SuppressWarnings("unchecked")
+            List<LessonDocument> lessonDocs = (List<LessonDocument>) results;
+            for (var doc : lessonDocs){
+                lesson.getDocumentURL().remove(doc);
             }
         }
         return saveLesson(lesson);

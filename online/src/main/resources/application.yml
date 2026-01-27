@@ -2,6 +2,16 @@ spring:
   application:
     name: online
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1082266400914-bcehrm9vvvt4l5t0fhblvtvuueae1dke.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
@@ -9,7 +19,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
       dialect: org.hibernate.dialect.PostgreSQLDialect
       format_sql: true
     show-sql: true

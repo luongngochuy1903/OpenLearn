@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface PostDocumentRepository extends JpaRepository<PostDocument, Long> {
     Optional<PostDocument> findByPostAndUrl(Post post, String url);
+    Optional<PostDocument> findByUrl(String url);
 }

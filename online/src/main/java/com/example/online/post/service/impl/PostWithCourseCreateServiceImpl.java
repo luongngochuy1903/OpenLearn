@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 @Service("PostWithCourseCreateServiceImpl")
@@ -59,6 +60,7 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
                     .contentMarkdown(postCreateRequest.getContentMarkdown())
                     .creator(user)
                     .createdAt(LocalDateTime.now())
+                    .documentURL(new ArrayList<>())
                     .updateAt(LocalDateTime.now())
                     .postCourses(new HashSet<>())
                     .build();
@@ -72,9 +74,11 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
             }
 
             // Tạo relation cho document
-            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
-            for (var documentReq : postCreateRequest.getDocs()) {
-                documentService.createDocument(post, documentReq);
+            if (postCreateRequest.getDocs() != null && !postCreateRequest.getDocs().isEmpty()) {
+                DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+                for (var documentReq : postCreateRequest.getDocs()) {
+                    documentService.createDocument(post, documentReq);
+                }
             }
             System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
             publisher.publishEvent(new PostChangedEvent(post.getId()));
@@ -98,6 +102,7 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
                 .contentMarkdown(postCreateRequest.getContentMarkdown())
                 .creator(user)
                 .community(community)
+                .documentURL(new ArrayList<>())
                 .createdAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
                 .postCourses(new HashSet<>())
@@ -112,9 +117,11 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
         }
 
         //Tạo document cho post
-        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
-        for (var documentReq : postCreateRequest.getDocs()) {
-            documentService.createDocument(post, documentReq);
+        if (postCreateRequest.getDocs() != null && !postCreateRequest.getDocs().isEmpty()) {
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.POST);
+            for (var documentReq : postCreateRequest.getDocs()) {
+                documentService.createDocument(post, documentReq);
+            }
         }
         System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
         publisher.publishEvent(new PostChangedEvent(post.getId()));

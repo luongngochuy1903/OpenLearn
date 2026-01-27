@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface LessonDocumentRepository extends JpaRepository<LessonDocument, Long> {
     Optional<LessonDocument> findByLessonAndUrl(Lesson lesson, String url);
+    Optional<LessonDocument> findByUrl(String url);
 }

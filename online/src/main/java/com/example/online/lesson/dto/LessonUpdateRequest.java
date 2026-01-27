@@ -16,6 +16,7 @@ public class LessonUpdateRequest {
     private Long id;
     private String name;
     private String description;
-    private List<DocumentRequestDTO> docs;
+    private List<DocumentRequestDTO> addDocs;
+    private List<DocumentRequestDTO> removeDocs;
     private String contentMarkdown;
 }

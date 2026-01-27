@@ -35,6 +35,7 @@ public class IndexService {
     public void deleteDocument(String id, String indices){
         try{
             client.delete(d -> d.index(indices).id(id));
+            LOG.info("Delete {} index with id {}", indices, id);
         }
         catch (Exception e){
             LOG.error("Something wrong when deleting document with id {} of index {}: {}", id,

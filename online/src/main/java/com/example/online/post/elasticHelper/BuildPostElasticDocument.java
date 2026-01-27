@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,9 +23,10 @@ public class BuildPostElasticDocument {
     private final PostRepository postRepository;
     private static final Logger LOG = LoggerFactory.getLogger(BuildPostElasticDocument.class);
 
+    @Transactional
     public PostGetResponse getPostDocument(Long postId){
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
-        User creator = postCourseService.getRoleOfPost(post, ContributorRole.CREATOR).get(0);
+        User creator = post.getCreator();
         List<User> contributors = postCourseService.getRoleOfPost(post, ContributorRole.CONTRIBUTOR);
         List<String> contributors_name = contributors.stream().map(user -> user.getLastName() + user.getFirstName()).toList();
 

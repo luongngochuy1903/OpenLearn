@@ -6,6 +6,7 @@ import com.example.online.domain.model.CourseModule;
 import com.example.online.domain.model.Lesson;
 import com.example.online.domain.model.User;
 import com.example.online.event.ModuleChangedEvent;
+import com.example.online.event.ModuleDeletedEvent;
 import com.example.online.exception.ForbiddenException;
 import com.example.online.exception.UnauthorizedException;
 import com.example.online.lesson.service.LessonService;
@@ -38,12 +39,18 @@ public class ModuleServiceImpl implements ModuleService {
         if (user == null) {
             throw new UnauthorizedException("You need to login first");
         }
-        Set<Lesson> LessonSet = moduleCreateRequest.getLessonCreateRequests().stream().map(lessonService::createLesson).collect(Collectors.toSet());
 
-        Module module = Module.builder().name(moduleCreateRequest.getName()).description(moduleCreateRequest.getDescription()).courseModules(new HashSet<>())
+        Module module = Module.builder().name(moduleCreateRequest.getName())
+                .description(moduleCreateRequest.getDescription())
+                .courseModules(new HashSet<>())
                 .creator(user)
-                .lessons(LessonSet).createdAt(LocalDateTime.now()).updateAt(LocalDateTime.now()).build();
-        return saveModule(module);
+                .build();
+        Module savedModule = saveModule(module);
+        Set<Lesson> lessonSet = moduleCreateRequest.getLessonCreateRequests().stream()
+                .map(lessonCreateRequest -> lessonService.createLesson(lessonCreateRequest, module))
+                .collect(Collectors.toSet());
+        savedModule.setLessons(lessonSet);
+        return savedModule;
     }
 
     public Module saveModule(Module module){
@@ -70,7 +77,6 @@ public class ModuleServiceImpl implements ModuleService {
         }
         if (moduleUpdateRequest.getLessonUpdateRequests() != null && !moduleUpdateRequest.getLessonUpdateRequests().isEmpty()){
             Set<Lesson> lessonSet = moduleUpdateRequest.getLessonUpdateRequests().stream().map(lessonService::updateLesson).collect(Collectors.toSet());
-            module.setLessons(lessonSet);
         }
         boolean existsInAnyCourse = courseModuleService.moduleExistsInAnyCourse(moduleId);
         if (existsInAnyCourse){
@@ -91,6 +97,11 @@ public class ModuleServiceImpl implements ModuleService {
         if (!creator.getId().equals(user.getId())){
             throw new ForbiddenException("You don't have permission to modify this module");
         }
+        List<Long> courseIds = courseModuleService.getCoursesIdByModule(moduleId);
+        boolean existsInAnyCourse = courseModuleService.moduleExistsInAnyCourse(moduleId);
         moduleRepository.delete(module);
+        if (existsInAnyCourse){
+            publisher.publishEvent(new ModuleDeletedEvent(moduleId, courseIds));
+        }
     }
 }

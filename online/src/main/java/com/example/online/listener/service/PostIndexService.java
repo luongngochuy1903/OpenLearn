@@ -3,6 +3,7 @@ package com.example.online.listener.service;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import com.example.online.elasticsearch.service.IndexService;
 import com.example.online.event.PostChangedEvent;
+import com.example.online.event.PostDeletedEvent;
 import com.example.online.helper.Indices;
 import com.example.online.post.dto.PostGetResponse;
 import com.example.online.post.elasticHelper.BuildPostElasticDocument;
@@ -43,5 +44,25 @@ public class PostIndexService {
         indexService.upsertDocument(doc, event.postId().toString(), Indices.POST_INDEX);
         sw.stop();
         LOG.info("Indexing post {} took {} ms", event.postId(), sw.getTotalTimeMillis());
+    }
+
+    @Async("indexExecutor")
+    @Retryable(retryFor = {
+            IOException.class,
+            ElasticsearchException.class,
+            RuntimeException.class
+    },
+            maxAttempts = 3,
+            backoff = @Backoff(
+                    delay = 1000,
+                    multiplier = 1.5
+            )
+    )
+    public void dropPost(PostDeletedEvent event){
+        StopWatch sw = new StopWatch("unindexPost");
+        sw.start("Start unindexing post");
+        indexService.deleteDocument(event.postId().toString(), Indices.POST_INDEX);
+        sw.stop();
+        LOG.info("Unindexing post {} took {} ms", event.postId(), sw.getTotalTimeMillis());
     }
 }

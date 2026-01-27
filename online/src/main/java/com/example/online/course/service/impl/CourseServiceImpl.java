@@ -12,6 +12,7 @@ import com.example.online.domain.model.Module;
 import com.example.online.elasticsearch.service.IndexService;
 import com.example.online.enumerate.ContributorRole;
 import com.example.online.event.CourseChangedEvent;
+import com.example.online.event.CourseDeletedEvent;
 import com.example.online.event.PostChangedEvent;
 import com.example.online.exception.BadRequestException;
 import com.example.online.exception.ForbiddenException;
@@ -127,7 +128,7 @@ public class CourseServiceImpl implements CourseService {
 
         courseRepository.delete(course);
         LOG.info("User {} deleted course id {} - {}", authUser.getEmail(), course.getId(), course.getName());
-        publisher.publishEvent(new CourseChangedEvent(courseId));
+        publisher.publishEvent(new CourseDeletedEvent(course.getId()));
     }
 
     /*
@@ -139,7 +140,7 @@ public class CourseServiceImpl implements CourseService {
             throw new UnauthorizedException("You need to login first");
         }
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new ResourceNotFoundException("Course not found!"));
-        User courseCreator = courseModuleService.getRoleOfCourse(course, ContributorRole.CREATOR).get(0);
+        User courseCreator = course.getCreator();
         if (courseCreator.getLastName() == null || courseCreator.getFirstName() == null){
             throw new ResourceNotFoundException("User name not found");
         }

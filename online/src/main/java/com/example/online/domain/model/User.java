@@ -1,7 +1,9 @@
 package com.example.online.domain.model;
 
+import com.example.online.enumerate.LoginType;
 import com.example.online.enumerate.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,8 +28,14 @@ public class User implements UserDetails{
     private Long id;
     private String firstName;
     private String lastName;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private LoginType loginType;
 
     @Enumerated(EnumType.STRING)
     private Role role;

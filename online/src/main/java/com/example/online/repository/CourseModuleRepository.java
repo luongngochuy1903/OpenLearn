@@ -13,6 +13,6 @@ public interface CourseModuleRepository extends JpaRepository<CourseModule, Long
     List<CourseModule> findModulesByCourse(Course course);
     Optional<CourseModule> findByCourse_IdAndModule_Id(Long courseId, Long moduleId);
     boolean existsByModuleId(Long moduleId);
-    List<Long> findCourseIdsByModuleId(Long moduleId);
+    List<CourseModule> findCourseIdsByModuleId(Long moduleId);
     boolean existsByCourse_IdAndModule_Id(Long courseId, Long moduleId);
 }

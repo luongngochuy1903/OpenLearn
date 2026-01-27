@@ -5,6 +5,8 @@ import com.example.online.domain.model.User;
 import com.example.online.post.dto.PostGetResponse;
 import com.example.online.post.service.PostQueryService;
 import com.example.online.post.service.PostService;
+import com.example.online.user.dto.UserCredentialsUpdateRequest;
+import com.example.online.user.dto.UserViewUpdateRequest;
 import com.example.online.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,23 @@ public class UserController {
     public ResponseEntity<String> unbanUser(@PathVariable Long targetManId, @CurrentUser User user){
         userService.unbanUser(targetManId, user);
         return ResponseEntity.ok("Unbanned this successfully");
+    }
+
+    // ================= PERSONAL INFORMATION ======================
+    // User view
+    @PostMapping("/information/view")
+    public ResponseEntity<String> updateViewUserInformation(@RequestBody UserViewUpdateRequest req,
+                                                            @CurrentUser User user){
+        userService.updateViewUser(req, user);
+        return ResponseEntity.ok("Update personal information successfully");
+    }
+
+    // User credentials
+    @PostMapping("/information/credentials")
+    public ResponseEntity<String> updateCredentialsUserInformation(@RequestBody UserCredentialsUpdateRequest req,
+                                                            @CurrentUser User user){
+        userService.updateCredentialsUser(req, user);
+        return ResponseEntity.ok("Update password successfully");
     }
 }
 

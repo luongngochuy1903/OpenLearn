@@ -6,7 +6,9 @@ import com.example.online.course.elasticHelper.BuildCourseElasticDocument;
 import com.example.online.coursemodule.service.CourseModuleService;
 import com.example.online.elasticsearch.service.IndexService;
 import com.example.online.event.CourseChangedEvent;
+import com.example.online.event.CourseDeletedEvent;
 import com.example.online.event.ModuleChangedEvent;
+import com.example.online.event.ModuleDeletedEvent;
 import com.example.online.helper.Indices;
 import com.example.online.user.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +74,49 @@ public class CourseIndexService {
         }
         sw.stop();
         LOG.info("Indexing module {} into courses took {} ms", event.moduleId(), sw.getTotalTimeMillis());
+    }
+
+    //================ DELETE INDEX ===========================
+    @Async("indexExecutor")
+    @Retryable(retryFor = {
+            IOException.class,
+            ElasticsearchException.class,
+            RuntimeException.class
+    },
+            maxAttempts = 3,
+            backoff = @Backoff(
+                    delay = 1000,
+                    multiplier = 1.5
+            )
+    )
+    public void dropCourse(CourseDeletedEvent event) {
+        StopWatch sw = new StopWatch("unindexCourse");
+        sw.start("Start unindexing course (case: Course onchange)");
+        indexService.deleteDocument(event.courseId().toString(), Indices.COURSE_INDEX);
+        sw.stop();
+        LOG.info("Unindexing course {} took {} ms", event.courseId(), sw.getTotalTimeMillis());
+    }
+
+    @Async("indexExecutor")
+    @Retryable(retryFor = {
+            IOException.class,
+            ElasticsearchException.class,
+            RuntimeException.class
+    },
+            maxAttempts = 3,
+            backoff = @Backoff(
+                    delay = 1000,
+                    multiplier = 1.5 // 1s, 1.5s, 3s
+            )
+    )
+    public void dropModuleInCourse(ModuleDeletedEvent event) {
+        StopWatch sw = new StopWatch("unindexCourse");
+        sw.start("Start unindexing course (case: Module onchange)");
+        for (var courseId : event.courseIds()){
+            CourseGetResponse doc = buildCourseElasticDocument.getCourseDocument(courseId);
+            indexService.upsertDocument(doc, courseId.toString(), Indices.COURSE_INDEX);
+        }
+        sw.stop();
+        LOG.info("Unindexing module {} into courses took {} ms", event.moduleId(), sw.getTotalTimeMillis());
     }
 }

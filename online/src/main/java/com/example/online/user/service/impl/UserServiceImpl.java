@@ -3,6 +3,8 @@ package com.example.online.user.service.impl;
 import com.example.online.course.controller.CourseController;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
+import com.example.online.domain.model.PostDocument;
+import com.example.online.domain.model.UserDocument;
 import com.example.online.enumerate.BanType;
 import com.example.online.enumerate.DocumentOf;
 import com.example.online.exception.BadRequestException;
@@ -18,6 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,33 +33,51 @@ public class UserServiceImpl implements UserService {
     private final DocumentGenerateFactory documentGenerateFactory;
     private static final Logger LOG = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    public User findUserById(Long id){
+    public User findUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    public void banUserFromEverything(Long userId, User user){
+    public void banUserFromEverything(Long userId, User user) {
         banUtils.addBanRecord(userId, BanType.EVERYTHING);
         LOG.info("User {} banned user {} (Everything)", user.getFirstName() + " " + user.getLastName(), userId);
     }
 
-    public void unbanUser(Long userId, User user){
+    public void unbanUser(Long userId, User user) {
         banUtils.removeAllBanRecord(userId);
         LOG.info("User {} unbanned user {} (Everything)", user.getFirstName() + " " + user.getLastName(), userId);
     }
 
-    public void updateViewUser(UserViewUpdateRequest userUpdateRequest, User user){
-        if (userUpdateRequest.getFirstName() != null){
+    @Transactional
+    public void updateViewUser(UserViewUpdateRequest userUpdateRequest, User authuser) {
+        User user = userRepository.findById(authuser.getId()).orElseThrow(() -> new ResourceNotFoundException("user not found"));
+        if (userUpdateRequest.getFirstName() != null) {
             user.setFirstName(userUpdateRequest.getFirstName());
         }
-        if (userUpdateRequest.getLastName() != null){
+        if (userUpdateRequest.getLastName() != null) {
             user.setLastName(userUpdateRequest.getLastName());
         }
-        DocumentService documentService = documentGenerateFactory.getService(DocumentOf.USER);
-        for (var documentReq : userUpdateRequest.getDocs()) {
-            documentService.createDocument(user, documentReq);
+        if (userUpdateRequest.getAddDocs() != null && !userUpdateRequest.getAddDocs().isEmpty()) {
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.USER);
+            List<?> results = documentService.resolveDocument(userUpdateRequest.getAddDocs(), user);
+            @SuppressWarnings("unchecked")
+            List<UserDocument> postDocs = (List<UserDocument>) results;
+            for (var doc : postDocs) {
+                user.getDocumentURL().add(doc);
+            }
         }
+        if (userUpdateRequest.getRemoveDocs() != null && !userUpdateRequest.getRemoveDocs().isEmpty()) {
+            DocumentService documentService = documentGenerateFactory.getService(DocumentOf.USER);
+            List<?> results = documentService.resolveDocument(userUpdateRequest.getRemoveDocs(), user);
+            @SuppressWarnings("unchecked")
+            List<UserDocument> postDocs = (List<UserDocument>) results;
+            for (var doc : postDocs) {
+                user.getDocumentURL().remove(doc);
+            }
+        }
+        userRepository.save(user);
     }
 
+    @Transactional
     public void updateCredentialsUser(UserCredentialsUpdateRequest request, User user) {
         // 3 fields validated
         if (request.getCurrentPassword() == null ||
@@ -77,5 +100,11 @@ public class UserServiceImpl implements UserService {
 
         // 4. Update password
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void updateEmailUser(String email, User user) {
+
     }
 }

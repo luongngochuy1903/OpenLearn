@@ -23,6 +23,6 @@ public class LessonDocument {
     private UploadType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "lesson_id")
     private Lesson lesson;
 }

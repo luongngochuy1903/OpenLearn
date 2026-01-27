@@ -4,9 +4,7 @@ import com.example.online.course.dto.CourseGetResponse;
 import com.example.online.course.elasticHelper.BuildCourseElasticDocument;
 import com.example.online.coursemodule.service.CourseModuleService;
 import com.example.online.elasticsearch.service.IndexService;
-import com.example.online.event.CourseChangedEvent;
-import com.example.online.event.ModuleChangedEvent;
-import com.example.online.event.PostChangedEvent;
+import com.example.online.event.*;
 import com.example.online.helper.Indices;
 import com.example.online.listener.service.CourseIndexService;
 import com.example.online.post.dto.PostGetResponse;
@@ -31,5 +29,16 @@ public class CourseIndexListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onModuleChanged(ModuleChangedEvent event) {
         courseIndexService.indexModuleInCourse(event);
+    }
+
+    //=========== DELETE INDEX ===================
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onCourseDeleted(CourseDeletedEvent event) {
+        courseIndexService.dropCourse(event);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onModuleDeleted(ModuleDeletedEvent event) {
+        courseIndexService.dropModuleInCourse(event);
     }
 }

@@ -9,6 +9,8 @@ import com.example.online.domain.model.Module;
 import com.example.online.enumerate.BanType;
 import com.example.online.enumerate.ContributorRole;
 import com.example.online.enumerate.RequestStatus;
+import com.example.online.event.CourseChangedEvent;
+import com.example.online.event.PostChangedEvent;
 import com.example.online.exception.AccessDeniedException;
 import com.example.online.exception.BadRequestException;
 import com.example.online.exception.ForbiddenException;
@@ -20,6 +22,7 @@ import com.example.online.utils.BanUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ public class CourseContributeServiceImpl implements CourseContributeService {
     private final CourseModuleService courseModuleService;
     private final ModuleRepository moduleRepository;
     private final CourseRepository courseRepository;
+    private final ApplicationEventPublisher publisher;
     private static final Logger LOG = LoggerFactory.getLogger(CourseContributeServiceImpl.class);
 
     /*
@@ -79,6 +83,7 @@ public class CourseContributeServiceImpl implements CourseContributeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Something gone wrong! Request not found"));
         requestAttachModuleToCourseRepository.delete(req);
         courseModuleService.createCourseModule(req.getUser(), req.getModule(), req.getCourse(), ContributorRole.CONTRIBUTOR);
+        publisher.publishEvent(new CourseChangedEvent(courseId));
         LOG.info("{} approved module with id {} to his/her course {}", user.getFirstName() + " " + user.getLastName(),
                 moduleId, courseId);
     }

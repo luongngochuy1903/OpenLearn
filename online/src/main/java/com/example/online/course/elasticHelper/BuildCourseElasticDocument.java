@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +27,20 @@ public class BuildCourseElasticDocument {
     private final CourseRepository courseRepository;
     private static final Logger LOG = LoggerFactory.getLogger(BuildCourseElasticDocument.class);
 
+    @Transactional
     public CourseGetResponse getCourseDocument(Long courseId){
         Course course = courseRepository.findById(courseId).orElseThrow(() -> new ResourceNotFoundException("Course not found"));
         List<Module> modules = courseModuleService.getModulesByCourse(course);
         List<ModuleGetResponse> moduleGetResponses = new ArrayList<>();
-        if (modules != null) {
+        if (modules != null && !modules.isEmpty()) {
+            System.out.println("size module: " + modules.size());
             moduleGetResponses = modules.stream().map(module ->
                     ModuleGetResponse.builder().moduleId(module.getId()).name(module.getName())
                             .description(module.getDescription()).build()
             ).toList();
         }
         Set<String> tags_name = course.getTags().stream().map(tag -> tag.getName()).collect(Collectors.toSet());
-        User courseCreator = courseModuleService.getRoleOfCourse(course, ContributorRole.CREATOR).get(0);
+        User courseCreator = course.getCreator();
         if (courseCreator.getLastName() == null || courseCreator.getFirstName() == null) {
             throw new ResourceNotFoundException("User name not found");
         }

@@ -58,7 +58,8 @@ public class CourseModuleServiceImpl implements CourseModuleService {
     }
 
     public List<Long> getCoursesIdByModule(Long moduleId){
-        return courseModuleRepository.findCourseIdsByModuleId(moduleId);
+        return courseModuleRepository.findCourseIdsByModuleId(moduleId)
+                .stream().map(courseModule -> courseModule.getCourse().getId()).toList();
     }
 
     public boolean moduleExistsInAnyCourse(Long moduleId){

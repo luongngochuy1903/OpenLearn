@@ -25,9 +25,9 @@ public class PostCourseServiceImpl implements PostCourseService {
                 .role(role)
                 .build();
 
-        post.getPostCourses().add(postCourse);
-        course.getPostCourses().add(postCourse);
-        user.getPostCourses().add(postCourse);
+//        post.getPostCourses().add(postCourse);
+//        course.getPostCourses().add(postCourse);
+//        user.getPostCourses().add(postCourse);
         save(postCourse);
         return postCourse;
     }

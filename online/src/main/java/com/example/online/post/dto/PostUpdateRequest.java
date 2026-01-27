@@ -15,5 +15,6 @@ import java.util.List;
 public class PostUpdateRequest {
     private String name;
     private String contentMarkdown;
-    private List<DocumentRequestDTO> docs;
+    private List<DocumentRequestDTO> addDocs;
+    private List<DocumentRequestDTO> removeDocs;
 }
