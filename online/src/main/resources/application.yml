@@ -10,6 +10,7 @@ spring:
             client-id: 1082266400914-bcehrm9vvvt4l5t0fhblvtvuueae1dke.apps.googleusercontent.com
             client-secret: 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
             scope:
+              - profile
               - email
 
   datasource:

@@ -1,18 +1,18 @@
 package com.example.online.config;
 
+import com.example.online.authentication.handler.OAuth2AuthenticationSuccessHandler;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
 import com.example.online.domain.model.User;
-import com.example.online.domain.model.UserDocument;
 import com.example.online.enumerate.DocumentOf;
 import com.example.online.enumerate.LoginType;
 import com.example.online.enumerate.Role;
 import com.example.online.enumerate.UploadType;
 import com.example.online.exception.BadRequestException;
-import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.modelmapper.internal.bytebuddy.implementation.bytecode.Throw;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -41,9 +41,12 @@ public class SecurityConfig {
     private final DocumentGenerateFactory documentGenerateFactory;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        LOG.info("Vào securityChain");
         http.csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
@@ -53,16 +56,21 @@ public class SecurityConfig {
                         "/oauth2/**", "/login/oauth2/**")
                         .permitAll().anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                //http://localhost:8080/oauth2/authorization/google
                 .oauth2Login(oath2 ->
-                        oath2.userInfoEndpoint(userinfo -> userinfo.userService(oauth2UserService())))
+                        oath2.userInfoEndpoint(userinfo -> userinfo.userService(oauth2UserService()))
+                                .successHandler(oAuth2AuthenticationSuccessHandler)
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        LOG.info("Vượt qua securityChain");
         return http.build();
     }
 
 
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
+        LOG.info("Vào OAuth2UserService");
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
         return request -> {
             OAuth2User oauth2User = delegate.loadUser(request);
@@ -104,7 +112,7 @@ public class SecurityConfig {
                 // We wrap the original user with potentially updated authorities and a new name attribute key if needed
                 String userNameAttributeName = request.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
                 if (userNameAttributeName == null) {
-                    userNameAttributeName = "email"; // Or "login" for GitHub
+                    userNameAttributeName = "sub"; // Or "login" for GitHub
                 }
 
                 // Constructor takes authorities, attributes, and nameAttributeKey

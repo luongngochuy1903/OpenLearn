@@ -15,9 +15,12 @@ import com.example.online.exception.UnauthorizedException;
 import com.example.online.repository.UserRepository;
 import com.example.online.authentication.jwt.service.JwtService;
 import com.example.online.authentication.refresh.service.RefreshTokenService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,7 +43,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     //Hàm đăng nhập rồi trả về token
     @Transactional
-    public AuthenticationResponse authentication(AuthenticationRequest request){
+    public AuthenticationResponse authentication(AuthenticationRequest request, HttpServletResponse response){
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -55,6 +58,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("You don't have an account"));
         var jwt = jwtService.generateToken(user);
         var refreshToken = refreshTokenService.rotateRefreshToken(user);
+
+        ResponseCookie accessCookie = ResponseCookie.from("access_token", jwt)
+                .httpOnly(true)
+//                .secure(true)           // localhost dev có thể để false
+                .path("/api")
+                .maxAge(7 * 24 * 60 * 60)
+//                .sameSite("None")       // nếu FE khác domain/port
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken.getToken())
+                .httpOnly(true)
+//                .secure(true)
+                .path("/api")
+                .maxAge(30L * 24 * 60 * 60)
+//                .sameSite("None")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         LOG.info("User {} authenticate for email {}", user.getLastName() + " " + user.getFirstName(), user.getEmail());
         return AuthenticationResponse.builder()
