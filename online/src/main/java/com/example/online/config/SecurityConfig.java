@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
@@ -46,7 +47,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        LOG.info("Vào securityChain");
         http.csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
@@ -63,14 +63,13 @@ public class SecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        LOG.info("Vượt qua securityChain");
+
         return http.build();
     }
 
 
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
-        LOG.info("Vào OAuth2UserService");
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
         return request -> {
             OAuth2User oauth2User = delegate.loadUser(request);
@@ -82,23 +81,44 @@ public class SecurityConfig {
             java.util.Map<String, Object> attributes = oauth2User.getAttributes();
             // 3. Determine unique identifier (e.g., email, id from provider)
             String userIdentifier = null;
+            String email = null;
             if ("google".equals(registrationId)) {
-                userIdentifier = (String) attributes.get("email"); // Google uses email
+                userIdentifier = (String) attributes.get("sub"); // Google uses email
+                email = (String) attributes.get("email");
                 // Add logic for other providers
 
                 if (userIdentifier == null) {
                     throw new OAuth2AuthenticationException("Cannot determine user identifier from OAuth2 provider: " + registrationId);
                 }
 
-                User user = userRepository.findByEmail(userIdentifier)
+                User user = userRepository.findBySub(userIdentifier)
                         .orElse(null);
+
+                // 4. Handle user with email domain changed, but it is still him/her
+                if (user != null && email != null && !email.equals(user.getEmail())){
+                    if (userRepository.existsByEmailAndIdNot(email, user.getId())) {
+                        throw new OAuth2AuthenticationException(
+                                new OAuth2Error("email_exists"),
+                                "This email has already been exists."
+                        );
+                    }
+                    user.setEmail(email);
+                    userRepository.save(user);
+                }
 
                 // 5. If user does not exist, create new user record
                 if (user == null) {
+                    if (userRepository.existsByEmail(email)) {
+                        throw new OAuth2AuthenticationException(
+                                new OAuth2Error("email_exists"),
+                                "This email has already been exists. Try another account or using default login."
+                        );
+                    }
                     user = User.builder()
                             .firstName((String) attributes.get("given_name"))
                             .lastName((String) attributes.get("family_name"))
-                            .email(userIdentifier)
+                            .email((String) attributes.get("email"))
+                            .sub(userIdentifier)
                             .role(Role.USER)
                             .loginType(LoginType.GOOGLE)
                             .build();

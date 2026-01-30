@@ -34,6 +34,8 @@ public class User implements UserDetails{
 
     private String password;
 
+    private String sub;
+
     @Enumerated(EnumType.STRING)
     private LoginType loginType;
 

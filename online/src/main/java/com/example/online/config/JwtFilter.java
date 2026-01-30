@@ -1,6 +1,9 @@
 package com.example.online.config;
 
 import com.example.online.authentication.jwt.service.JwtService;
+import com.example.online.domain.model.User;
+import com.example.online.exception.ResourceNotFoundException;
+import com.example.online.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -23,6 +26,7 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     public void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -48,9 +52,9 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String userEmail = jwtService.extractUsername(jwt);
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+        Long id = Long.valueOf(jwtService.extractUsername(jwt));
+        if (SecurityContextHolder.getContext().getAuthentication() == null){
+            User userDetails = userRepository.findById(id).orElse(null);
             if (userDetails != null && jwtService.isTokenValid(jwt, userDetails)){
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContext context = SecurityContextHolder.createEmptyContext();

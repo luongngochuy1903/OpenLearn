@@ -1,12 +1,15 @@
 package com.example.online.authentication.jwt.service.impl;
 
 import com.example.online.authentication.authenticate.controller.AuthenticationController;
+import com.example.online.domain.model.User;
 import com.example.online.exception.ForbiddenException;
 import com.example.online.authentication.jwt.service.JwtService;
 import com.example.online.exception.UnauthorizedException;
+import com.example.online.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +23,12 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
     @Value("${app.jwt.secret}")
     private String SECRET_KEY; // >= 32 ký tự
     private static final Logger LOG = LoggerFactory.getLogger(JwtServiceImpl.class);
+    private final UserRepository userRepository;
 
     @Override
     public String extractUsername(String token) {
@@ -31,15 +36,15 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateToken(UserDetails userDetails){
+    public String generateToken(User userDetails){
         return generateToken(new HashMap<>(), userDetails);
     }
     //Tạo token với extra Claims
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(Map<String, Object> extraClaims, User userDetails) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(userDetails.getId().toString())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -51,9 +56,9 @@ public class JwtServiceImpl implements JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isTokenValid(String token, User userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username.equals(userDetails.getId().toString()) && !isTokenExpired(token));
     }
 
     public boolean isTokenExpired(String token) {

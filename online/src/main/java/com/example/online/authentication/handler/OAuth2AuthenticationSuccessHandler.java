@@ -33,7 +33,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        LOG.info("Vào handler");
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         User user = userRepository.findByEmail(oAuth2User.getAttribute("email"))
                 .orElseThrow(() -> new ResourceNotFoundException("Email not found in handler"));
@@ -46,6 +45,14 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .sameSite("None")
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken.getToken())
+                .httpOnly(true)
+//                .secure(true)
+                .path("/api")
+                .maxAge(30L * 24 * 60 * 60)
+//                .sameSite("None")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
