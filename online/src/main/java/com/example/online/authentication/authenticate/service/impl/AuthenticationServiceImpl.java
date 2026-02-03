@@ -7,11 +7,15 @@ import com.example.online.authentication.authenticate.dto.RegisterRequest;
 import com.example.online.authentication.authenticate.dto.RegisterResponse;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
+import com.example.online.domain.model.OnetimeToken;
 import com.example.online.enumerate.DocumentOf;
 import com.example.online.enumerate.Role;
+import com.example.online.exception.BadRequestException;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.domain.model.User;
 import com.example.online.exception.UnauthorizedException;
+import com.example.online.helper.Sha256Hashing;
+import com.example.online.repository.OnetimeTokenRepository;
 import com.example.online.repository.UserRepository;
 import com.example.online.authentication.jwt.service.JwtService;
 import com.example.online.authentication.refresh.service.RefreshTokenService;
@@ -28,7 +32,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final DocumentGenerateFactory documentGenerateFactory;
+    private final OnetimeTokenRepository onetimeTokenRepository;
     private final JwtService jwtService;
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
@@ -59,14 +68,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var jwt = jwtService.generateToken(user);
         var refreshToken = refreshTokenService.rotateRefreshToken(user);
 
-        ResponseCookie accessCookie = ResponseCookie.from("access_token", jwt)
-                .httpOnly(true)
-//                .secure(true)           // localhost dev có thể để false
-                .path("/api")
-                .maxAge(7 * 24 * 60 * 60)
-//                .sameSite("None")       // nếu FE khác domain/port
-                .build();
-
         ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken.getToken())
                 .httpOnly(true)
 //                .secure(true)
@@ -75,14 +76,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //                .sameSite("None")
                 .build();
 
-        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         LOG.info("User {} authenticate for email {}", user.getLastName() + " " + user.getFirstName(), user.getEmail());
         return AuthenticationResponse.builder()
                 .token(jwt)
                 .redirectURL("/api/v1/home")
-                .refreshToken(refreshToken.getToken())
                 .build();
     }
 
@@ -108,6 +107,45 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .password(user.getPassword())
+                .build();
+    }
+
+    /*
+        Function: After OAuth2 Authorization succeeded, BE return authorization code to FE in redirect form
+        and FE call POST this endpoint to get access token, refresh token
+     */
+    public AuthenticationResponse exchangeAuthorizationCode(AuthenticationRequest request, HttpServletResponse response, String code){
+        if (code == null || code.isBlank()) {
+            throw new BadRequestException("Missing authorization code");
+        }
+
+        String hashedCode = Sha256Hashing.sha256(code);
+        OnetimeToken onetimeToken = onetimeTokenRepository.findByCodeHash(hashedCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Authorization code not found"));
+        if (onetimeToken.getExpiredAt().isBefore(Instant.now())){
+            throw new BadRequestException("Authorization code expired. Please login again");
+        }
+
+        User user = onetimeToken.getUser();
+        var jwt = jwtService.generateToken(user);
+        var refreshToken = refreshTokenService.rotateRefreshToken(user);
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken.getToken())
+                .httpOnly(true)
+//                .secure(true)
+                .path("/api")
+                .maxAge(30L * 24 * 60 * 60)
+//                .sameSite("None")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+        onetimeTokenRepository.delete(onetimeToken);
+
+        LOG.info("User {} authenticate for email {} with OAuth2 authorization", user.getLastName() + " " + user.getFirstName(), user.getEmail());
+        return AuthenticationResponse.builder()
+                .token(jwt)
+                .redirectURL("/api/v1/home")
                 .build();
     }
 }

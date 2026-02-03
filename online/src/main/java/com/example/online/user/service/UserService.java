@@ -10,4 +10,5 @@ public interface UserService {
     void unbanUser(Long userId, User user);
     void updateViewUser(UserViewUpdateRequest userUpdateRequest, User user);
     void updateCredentialsUser(UserCredentialsUpdateRequest request, User user);
+    void loggingOut(User user, String token);
 }

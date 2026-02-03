@@ -23,7 +23,7 @@ spring:
       ddl-auto: create
       dialect: org.hibernate.dialect.PostgreSQLDialect
       format_sql: true
-    show-sql: true
+    show-sql: false
 
   data:
     mongodb:
@@ -53,8 +53,4 @@ app:
     secret_access_key: ${SECRET_ACCESS_KEY}
     region: ${REGION}
 
-#logging:
-#  level:
-#    org.springframework.web: INFO
-#    org.hibernate.SQL: INFO
 

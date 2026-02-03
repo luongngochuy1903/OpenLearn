@@ -3,11 +3,7 @@ package com.example.online.post.service.impl;
 import com.example.online.annotation.CheckCommunityPostForMember;
 import com.example.online.annotation.CheckPostCreator;
 import com.example.online.domain.model.*;
-import com.example.online.enumerate.BanType;
-import com.example.online.enumerate.ContributorRole;
-import com.example.online.enumerate.RequestStatus;
-import com.example.online.event.PostChangedEvent;
-import com.example.online.event.PostDeletedEvent;
+import com.example.online.enumerate.*;
 import com.example.online.exception.AccessDeniedException;
 import com.example.online.exception.BadRequestException;
 import com.example.online.exception.ForbiddenException;
@@ -19,10 +15,10 @@ import com.example.online.repository.CourseRepository;
 import com.example.online.repository.PostRepository;
 import com.example.online.repository.RequestAttachCourseToPostRepository;
 import com.example.online.utils.BanUtils;
+import com.example.online.worker.OutboxWorker;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,7 +34,7 @@ public class PostContributeServiceImpl implements PostContributeService {
     private final BanUtils banUtils;
     private final PostCourseService postCourseService;
     private final RequestAttachCourseToPostRepository requestAttachCourseToPostRepository;
-    private final ApplicationEventPublisher publisher;
+    private final OutboxWorker outboxWorker;
     private static final Logger LOG = LoggerFactory.getLogger(PostContributeServiceImpl.class);
 
     /*
@@ -79,7 +75,6 @@ public class PostContributeServiceImpl implements PostContributeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Something gone wrong! Request not found"));
         requestAttachCourseToPostRepository.delete(req);
         postCourseService.createPostCourse(req.getPost(), req.getCourse(), req.getUser(), ContributorRole.CONTRIBUTOR);
-        publisher.publishEvent(new PostChangedEvent(postId));
         LOG.info("{} approved course with id {} to his/her post {}", user.getFirstName() + " " + user.getLastName(),
                 courseId, postId);
     }

@@ -20,6 +20,13 @@ import java.util.List;
 public class UserController {
     private final PostQueryService postQueryService;
     private final UserService userService;
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@CurrentUser User user, @RequestBody String token){
+        userService.loggingOut(user, token);
+        return ResponseEntity.ok("Log out successfully");
+    }
+
     @GetMapping("/posts")
     public ResponseEntity<List<PostGetResponse>> getMyPostDetail(@CurrentUser User user){
         return ResponseEntity.ok(postQueryService.viewMyPostDetail(user));

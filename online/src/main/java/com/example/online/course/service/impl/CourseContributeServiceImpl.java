@@ -6,19 +6,17 @@ import com.example.online.course.service.CourseContributeService;
 import com.example.online.coursemodule.service.CourseModuleService;
 import com.example.online.domain.model.*;
 import com.example.online.domain.model.Module;
-import com.example.online.enumerate.BanType;
-import com.example.online.enumerate.ContributorRole;
-import com.example.online.enumerate.RequestStatus;
-import com.example.online.event.CourseChangedEvent;
-import com.example.online.event.PostChangedEvent;
+import com.example.online.enumerate.*;
 import com.example.online.exception.AccessDeniedException;
 import com.example.online.exception.BadRequestException;
 import com.example.online.exception.ForbiddenException;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.repository.CourseRepository;
 import com.example.online.repository.ModuleRepository;
+import com.example.online.repository.OutboxRepository;
 import com.example.online.repository.RequestAttachModuleToCourseRepository;
 import com.example.online.utils.BanUtils;
+import com.example.online.worker.OutboxWorker;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +38,8 @@ public class CourseContributeServiceImpl implements CourseContributeService {
     private final CourseModuleService courseModuleService;
     private final ModuleRepository moduleRepository;
     private final CourseRepository courseRepository;
-    private final ApplicationEventPublisher publisher;
+    private final OutboxRepository outboxRepository;
+    private final OutboxWorker outboxWorker;
     private static final Logger LOG = LoggerFactory.getLogger(CourseContributeServiceImpl.class);
 
     /*
@@ -83,7 +84,24 @@ public class CourseContributeServiceImpl implements CourseContributeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Something gone wrong! Request not found"));
         requestAttachModuleToCourseRepository.delete(req);
         courseModuleService.createCourseModule(req.getUser(), req.getModule(), req.getCourse(), ContributorRole.CONTRIBUTOR);
-        publisher.publishEvent(new CourseChangedEvent(courseId));
+        OutBoxEvent outBoxEvent = outboxWorker.getOutBoxEvent(courseId, ESType.COURSE, List.of(OutboxStatus.NEW, OutboxStatus.FAILED, OutboxStatus.PROCESSING));
+        if (outBoxEvent != null) {
+            if (outBoxEvent.getStatus().equals(OutboxStatus.PROCESSING)) {
+                throw new BadRequestException("Something happened! Please try again later");
+            }
+            outBoxEvent.setStatus(OutboxStatus.NEW);
+            outBoxEvent.setEventType(OutboxEventType.CHANGED);
+        }
+        else{
+            outBoxEvent = OutBoxEvent.builder()
+                    .aggregateId(courseId)
+                    .eventType(OutboxEventType.CHANGED)
+                    .type(ESType.COURSE)
+                    .status(OutboxStatus.NEW)
+                    .createdAt(Instant.now())
+                    .build();
+        }
+        outboxRepository.save(outBoxEvent);
         LOG.info("{} approved module with id {} to his/her course {}", user.getFirstName() + " " + user.getLastName(),
                 moduleId, courseId);
     }
@@ -166,6 +184,24 @@ public class CourseContributeServiceImpl implements CourseContributeService {
         else {
             throw new AccessDeniedException("You don't have permission to perform this action");
         }
+        OutBoxEvent outBoxEvent = outboxWorker.getOutBoxEvent(courseId, ESType.COURSE, List.of(OutboxStatus.NEW, OutboxStatus.FAILED, OutboxStatus.PROCESSING));
+        if (outBoxEvent != null) {
+            if (outBoxEvent.getStatus().equals(OutboxStatus.PROCESSING)) {
+                throw new BadRequestException("Something happened! Please try again later");
+            }
+            outBoxEvent.setStatus(OutboxStatus.NEW);
+            outBoxEvent.setEventType(OutboxEventType.CHANGED);
+        }
+        else{
+            outBoxEvent = OutBoxEvent.builder()
+                    .aggregateId(courseId)
+                    .eventType(OutboxEventType.CHANGED)
+                    .type(ESType.COURSE)
+                    .status(OutboxStatus.NEW)
+                    .createdAt(Instant.now())
+                    .build();
+        }
+        outboxRepository.save(outBoxEvent);
         LOG.info("User {} removed module {} from course {}", user.getEmail(), moduleId, courseId);
     }
 

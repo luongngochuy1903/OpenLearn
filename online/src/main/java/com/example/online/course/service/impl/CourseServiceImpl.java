@@ -4,36 +4,32 @@ import com.example.online.annotation.CheckCourseCreator;
 import com.example.online.course.dto.CourseCreateRequest;
 import com.example.online.course.dto.CourseGetResponse;
 import com.example.online.course.dto.CourseUpdateRequest;
-import com.example.online.course.elasticHelper.BuildCourseElasticDocument;
 import com.example.online.course.service.CourseService;
 import com.example.online.coursemodule.service.CourseModuleService;
 import com.example.online.domain.model.*;
 import com.example.online.domain.model.Module;
-import com.example.online.elasticsearch.service.IndexService;
 import com.example.online.enumerate.ContributorRole;
-import com.example.online.event.CourseChangedEvent;
-import com.example.online.event.CourseDeletedEvent;
-import com.example.online.event.PostChangedEvent;
+import com.example.online.enumerate.ESType;
+import com.example.online.enumerate.OutboxEventType;
+import com.example.online.enumerate.OutboxStatus;
 import com.example.online.exception.BadRequestException;
-import com.example.online.exception.ForbiddenException;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.exception.UnauthorizedException;
-import com.example.online.helper.Indices;
 import com.example.online.lesson.dto.LessonGetResponse;
-import com.example.online.lesson.service.LessonService;
 import com.example.online.module.dto.ModuleGetResponse;
 import com.example.online.module.service.ModuleService;
 import com.example.online.repository.CourseRepository;
+import com.example.online.repository.OutboxRepository;
 import com.example.online.tag.service.TagService;
 import com.example.online.user.service.UserService;
-import com.example.online.utils.SecurityUtils;
+import com.example.online.worker.OutboxWorker;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +44,8 @@ public class CourseServiceImpl implements CourseService {
     private final ModuleService moduleService;
     private final CourseModuleService courseModuleService;
     private final UserService userService;
-    private final ApplicationEventPublisher publisher;
+    private final OutboxWorker outboxWorker;
+    private final OutboxRepository outboxRepository;
     private static final Logger LOG = LoggerFactory.getLogger(CourseServiceImpl.class);
 
 
@@ -82,7 +79,13 @@ public class CourseServiceImpl implements CourseService {
         }
         System.out.println("Test coi course có trường gì: " + course.getCourseModules().size());
         LOG.info("User {} created course id {} - {}", user.getEmail(), course.getId(), course.getName());
-        publisher.publishEvent(new CourseChangedEvent(course.getId()));
+        outboxRepository.save(OutBoxEvent.builder()
+                .aggregateId(course.getId())
+                        .type(ESType.COURSE)
+                .eventType(OutboxEventType.CHANGED)
+                .status(OutboxStatus.NEW)
+                .createdAt(Instant.now())
+                .build());
         return course;
     }
 
@@ -111,7 +114,24 @@ public class CourseServiceImpl implements CourseService {
         Set<Tag> tagSet = tagService.resolveTags(courseUpdateRequest.getTags());
         course.setTags(tagSet);
         LOG.info("User {} updated course id {} - {}", authUser.getEmail(), course.getId(), course.getName());
-        publisher.publishEvent(new CourseChangedEvent(course.getId()));
+        OutBoxEvent outBoxEvent = outboxWorker.getOutBoxEvent(courseId, ESType.COURSE, List.of(OutboxStatus.NEW, OutboxStatus.FAILED, OutboxStatus.PROCESSING));
+        if (outBoxEvent != null) {
+            if (outBoxEvent.getStatus().equals(OutboxStatus.PROCESSING)) {
+                throw new BadRequestException("Something happened! Please try again later");
+            }
+            outBoxEvent.setStatus(OutboxStatus.NEW);
+            outBoxEvent.setEventType(OutboxEventType.CHANGED);
+        }
+        else{
+            outBoxEvent = OutBoxEvent.builder()
+                    .aggregateId(courseId)
+                    .eventType(OutboxEventType.CHANGED)
+                    .type(ESType.COURSE)
+                    .status(OutboxStatus.NEW)
+                    .createdAt(Instant.now())
+                    .build();
+        }
+        outboxRepository.save(outBoxEvent);
         return courseRepository.save(course);
     }
 
@@ -128,7 +148,24 @@ public class CourseServiceImpl implements CourseService {
 
         courseRepository.delete(course);
         LOG.info("User {} deleted course id {} - {}", authUser.getEmail(), course.getId(), course.getName());
-        publisher.publishEvent(new CourseDeletedEvent(course.getId()));
+        OutBoxEvent outBoxEvent = outboxWorker.getOutBoxEvent(courseId, ESType.COURSE, List.of(OutboxStatus.NEW, OutboxStatus.FAILED, OutboxStatus.PROCESSING));
+        if (outBoxEvent != null) {
+            if (outBoxEvent.getStatus().equals(OutboxStatus.PROCESSING)) {
+                throw new BadRequestException("Something happened! Please try again later");
+            }
+            outBoxEvent.setStatus(OutboxStatus.NEW);
+            outBoxEvent.setEventType(OutboxEventType.DELETED);
+        }
+        else{
+            outBoxEvent = OutBoxEvent.builder()
+                    .aggregateId(courseId)
+                    .eventType(OutboxEventType.DELETED)
+                    .type(ESType.COURSE)
+                    .status(OutboxStatus.NEW)
+                    .createdAt(Instant.now())
+                    .build();
+        }
+        outboxRepository.save(outBoxEvent);
     }
 
     /*

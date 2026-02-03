@@ -19,6 +19,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             AuthenticationException authException
     ) throws IOException {
 
+        String code = (String) request.getAttribute("auth_error");
+        if (code == null) code = "UNAUTHORIZED";
+
+        String message = switch (code) {
+            case "ACCESS_TOKEN_EXPIRED" -> "Access token expired";
+            default -> "You have to login";
+        };
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
 
@@ -26,11 +34,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         {
           "status": 401,
           "error": "Unauthorized",
-          "message": "Bạn cần đăng nhập",
+          "code": "%s"
+          "message": "%s",
           "path": "%s",
           "timestamp": "%s"
         }
         """.formatted(
+                code,
+                message,
                 request.getRequestURI(),
                 LocalDateTime.now()
         ));

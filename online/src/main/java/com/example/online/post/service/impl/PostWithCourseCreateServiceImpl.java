@@ -1,14 +1,11 @@
 package com.example.online.post.service.impl;
 
 import com.example.online.annotation.CheckCommunityMember;
-import com.example.online.annotation.CheckCommunityPostForMember;
 import com.example.online.course.service.CourseService;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
 import com.example.online.domain.model.*;
-import com.example.online.enumerate.ContributorRole;
-import com.example.online.enumerate.DocumentOf;
-import com.example.online.event.PostChangedEvent;
+import com.example.online.enumerate.*;
 import com.example.online.exception.ResourceNotFoundException;
 import com.example.online.exception.UnauthorizedException;
 import com.example.online.post.dto.PostCreateRequest;
@@ -16,13 +13,17 @@ import com.example.online.post.enumerate.PostCreateType;
 import com.example.online.post.service.PostCreateService;
 import com.example.online.postcourse.service.PostCourseService;
 import com.example.online.repository.CommunityRepository;
+import com.example.online.repository.OutboxRepository;
 import com.example.online.repository.PostRepository;
 import com.example.online.user.service.UserService;
+import com.example.online.user.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,7 +37,8 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
     private final CourseService courseService;
     private final PostCourseService postCourseService;
     private final DocumentGenerateFactory documentGenerateFactory;
-    private final ApplicationEventPublisher publisher;
+    private final OutboxRepository outboxRepository;
+    private static final Logger LOG = LoggerFactory.getLogger(PostWithCourseCreateServiceImpl.class);
 
     @Override
     public PostCreateType getType() {
@@ -81,7 +83,15 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
                 }
             }
             System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
-            publisher.publishEvent(new PostChangedEvent(post.getId()));
+            outboxRepository.save(OutBoxEvent.builder()
+                    .aggregateId(post.getId())
+                    .type(ESType.POST)
+                    .eventType(OutboxEventType.CHANGED)
+                    .status(OutboxStatus.NEW)
+                    .createdAt(Instant.now())
+                    .build());
+
+            LOG.info("User {} created post {} with course", user.getFirstName() + " " + user.getLastName(), post.getId());
             return post;
     }
 
@@ -124,7 +134,14 @@ public class PostWithCourseCreateServiceImpl implements PostCreateService {
             }
         }
         System.out.println("Test coi post có trường gì: " + post.getPostCourses().size());
-        publisher.publishEvent(new PostChangedEvent(post.getId()));
+        outboxRepository.save(OutBoxEvent.builder()
+                .aggregateId(post.getId())
+                .type(ESType.POST)
+                .eventType(OutboxEventType.CHANGED)
+                .status(OutboxStatus.NEW)
+                .createdAt(Instant.now())
+                .build());
+        LOG.info("User {} created post {} in community {} with course", communityId, post.getId(), user.getFirstName() + " " + user.getLastName());
         return post;
     }
 }

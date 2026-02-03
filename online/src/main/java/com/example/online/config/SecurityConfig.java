@@ -1,5 +1,6 @@
 package com.example.online.config;
 
+import com.example.online.authentication.handler.OAuth2AuthenticationFailureHandler;
 import com.example.online.authentication.handler.OAuth2AuthenticationSuccessHandler;
 import com.example.online.document.factory.DocumentGenerateFactory;
 import com.example.online.document.service.DocumentService;
@@ -43,6 +44,7 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private static final Logger LOG = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
@@ -60,6 +62,7 @@ public class SecurityConfig {
                 .oauth2Login(oath2 ->
                         oath2.userInfoEndpoint(userinfo -> userinfo.userService(oauth2UserService()))
                                 .successHandler(oAuth2AuthenticationSuccessHandler)
+                                .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

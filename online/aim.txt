@@ -1,0 +1,1 @@
+- Guarantee the consistency of database and Elastic Search. (Using Transactional Outbox)

@@ -20,6 +20,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -44,6 +45,7 @@ public class JwtServiceImpl implements JwtService {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
+                .setId(UUID.randomUUID().toString())
                 .setSubject(userDetails.getId().toString())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
@@ -67,6 +69,10 @@ public class JwtServiceImpl implements JwtService {
 
     public Date extractExpiration(String token){
         return extractClaim(token, Claims::getExpiration); //input là Claims, output là type của getExpiration
+    }
+
+    public String extractJti(String token){
+        return extractClaim(token, Claims::getId); //input là Claims, output là type của getExpiration
     }
 
     //Móc ra các Claims
