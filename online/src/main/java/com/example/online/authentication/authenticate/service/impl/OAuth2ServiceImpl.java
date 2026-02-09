@@ -23,9 +23,10 @@ public class OAuth2ServiceImpl implements OAuth2Service {
 
         onetimeTokenRepository.save(
                 OnetimeToken.builder()
-                        .token(rawHashed)
+                        .codeHash(rawHashed)
                         .type(OneTimeTokenType.AUTHORIZATION_CODE)
-                        .expiredAt(Instant.now().plusSeconds(8))
+                        .user(user)
+                        .expiredAt(Instant.now().plusSeconds(60))
                         .build()
         );
         return rawCode;

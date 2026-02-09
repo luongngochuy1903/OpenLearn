@@ -34,7 +34,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         {
           "status": 401,
           "error": "Unauthorized",
-          "code": "%s"
+          "code": "%s",
           "message": "%s",
           "path": "%s",
           "timestamp": "%s"

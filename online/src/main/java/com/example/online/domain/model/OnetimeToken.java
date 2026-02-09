@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+@Entity
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,7 +23,7 @@ public class OnetimeToken {
     @Enumerated(EnumType.STRING)
     private OneTimeTokenType type;
 
-    private String token;
+    private String codeHash;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;

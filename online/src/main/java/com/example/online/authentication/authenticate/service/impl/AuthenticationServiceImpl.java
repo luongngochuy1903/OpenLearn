@@ -123,6 +123,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         OnetimeToken onetimeToken = onetimeTokenRepository.findByCodeHash(hashedCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Authorization code not found"));
         if (onetimeToken.getExpiredAt().isBefore(Instant.now())){
+            LOG.info("diff(ms)  = {}", java.time.Duration.between(Instant.now(), onetimeToken.getExpiredAt()).toMillis());
             throw new BadRequestException("Authorization code expired. Please login again");
         }
 

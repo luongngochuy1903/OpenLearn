@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findByIdAndCreator_Id(Long courseId, Long userId);
+    List<Course> findCourseResponsesByIds(List<Long> courseIds);
 }
