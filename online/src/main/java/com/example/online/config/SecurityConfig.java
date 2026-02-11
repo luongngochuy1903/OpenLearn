@@ -10,6 +10,7 @@ import com.example.online.enumerate.LoginType;
 import com.example.online.enumerate.Role;
 import com.example.online.enumerate.UploadType;
 import com.example.online.exception.BadRequestException;
+import com.example.online.middleware.ratelimiter.middleware.IpRateLimiterFilter;
 import com.example.online.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
+    private final IpRateLimiterFilter ipRateLimiterFilter;
     private final UserRepository userRepository;
     private final AuthenticationProvider authenticationProvider;
     private final DocumentGenerateFactory documentGenerateFactory;
@@ -65,7 +67,10 @@ public class SecurityConfig {
                                 .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//                .addFilterBefore(ipRateLimiterFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(ipRateLimiterFilter, JwtFilter.class);
+
 
         return http.build();
     }

@@ -29,7 +29,8 @@ public class GlobalExceptionHandler {
             BadRequestException.class,
             UnauthorizedException.class,
             ForbiddenException.class,
-            AccessDeniedException.class
+            AccessDeniedException.class,
+            TooManyRequestException.class
     })
     public ResponseEntity<Map<String, Object>> handleBusinessException(
             RuntimeException ex, WebRequest request) {

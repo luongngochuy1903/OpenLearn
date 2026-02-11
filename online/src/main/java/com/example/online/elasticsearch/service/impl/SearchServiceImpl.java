@@ -139,12 +139,12 @@ public class SearchServiceImpl implements SearchService {
         // ===== QUERY DATABASE =====
         List<PostGetResponse> posts = postIds.isEmpty()
                 ? List.of()
-                : postRepository.findPostResponsesByIds(postIds).stream()
+                : postRepository.findPostByIdIn(postIds).stream()
                 .map(post -> buildPostElasticDocument.getPostDocument(post.getId())).toList();
 
         List<CourseGetResponse> courses = courseIds.isEmpty()
                 ? List.of()
-                : courseRepository.findCourseResponsesByIds(courseIds).stream()
+                : courseRepository.findCourseByIdIn(courseIds).stream()
                 .map(course -> buildCourseElasticDocument.getCourseDocument(course.getId())).toList();;
 
         return new SearchResponseDTO(posts, courses);

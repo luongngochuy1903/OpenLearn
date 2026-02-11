@@ -1,5 +1,6 @@
 package com.example.online.authentication.authenticate.controller;
 
+import com.example.online.annotation.RateLimitUser;
 import com.example.online.authentication.authenticate.dto.AuthenticationRequest;
 import com.example.online.authentication.authenticate.dto.AuthenticationResponse;
 import com.example.online.authentication.authenticate.dto.RegisterRequest;

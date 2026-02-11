@@ -1,6 +1,4 @@
 package com.example.online.config;
-
-import com.example.online.upload.service.impl.UploadImageService;
 import org.redisson.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,14 +57,15 @@ public class RedisConfig {
         // Get manager from provider
         CacheManager cacheManager = provider.getCacheManager();
 
-        // Set cache config using Redisson config
-        javax.cache.configuration.Configuration<Object, Object> jcacheConfig =
+        // Set cache config using Redisson config.
+        // Ta muốn gán kiểu Configuration vì ta không muốn lệ thuộc vào Redisson Configuration. sau này nếu đổi sang Lettuce configuration thì chỉ đổi vế bên phải.
+        javax.cache.configuration.Configuration<Object, Object> cacheConfig =
                  org.redisson.jcache.configuration.RedissonConfiguration.fromConfig(config);
 
         // Chủ động tạo cache trước. Nếu không, filter đầu tiên truy cập
         // có thể gặp lỗi "cache not found" trong môi trường đa luồng.
         if (cacheManager.getCache(RATE_LIMIT_CACHE) == null){
-            cacheManager.createCache(RATE_LIMIT_CACHE, jcacheConfig);
+            cacheManager.createCache(RATE_LIMIT_CACHE, cacheConfig);
         }
         LOG.info("JCache API {} for bucket4j initialized.", RATE_LIMIT_CACHE);
         return cacheManager;

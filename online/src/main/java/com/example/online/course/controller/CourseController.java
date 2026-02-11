@@ -1,6 +1,7 @@
 package com.example.online.course.controller;
 
 import com.example.online.annotation.CurrentUser;
+import com.example.online.annotation.RateLimitUser;
 import com.example.online.course.dto.*;
 import com.example.online.course.service.CourseContributeService;
 import com.example.online.domain.model.Course;
@@ -27,6 +28,7 @@ public class CourseController {
     private static final Logger LOG = LoggerFactory.getLogger(CourseController.class);
 
     @PostMapping
+    @RateLimitUser(capacity = 1, refillTokens = 1, duration = 1)
     public ResponseEntity<CourseCreateResponse> createCourses(@Valid @RequestBody CourseCreateRequest courseCreateRequest,
                                                               @CurrentUser User user){
         LOG.info("POST /api/v1/courses - Body: CourseCreateRequest");

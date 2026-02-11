@@ -22,17 +22,26 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String code = (String) request.getAttribute("auth_error");
         if (code == null) code = "UNAUTHORIZED";
 
-        String message = switch (code) {
-            case "ACCESS_TOKEN_EXPIRED" -> "Access token expired";
-            default -> "You have to login";
+        String message;
+        switch (code) {
+            case "ACCESS_TOKEN_EXPIRED" -> {
+                message = "Access token expired";
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            }
+            case "TOO_MANY_REQUEST" -> {
+                message = "Too many request!";
+                response.setStatus(429);
+            }
+            default -> {
+                message = "You have to login";
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            }
         };
-
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
 
         response.getWriter().write("""
         {
-          "status": 401,
+          "status": %s,
           "error": "Unauthorized",
           "code": "%s",
           "message": "%s",
@@ -40,6 +49,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
           "timestamp": "%s"
         }
         """.formatted(
+                response.getStatus(),
                 code,
                 message,
                 request.getRequestURI(),
