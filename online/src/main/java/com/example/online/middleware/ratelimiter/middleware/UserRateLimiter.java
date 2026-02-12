@@ -22,10 +22,10 @@ public class UserRateLimiter {
     @Around("@annotation(rateLimitUser)")
     public Object preHandle(ProceedingJoinPoint joinPoint, RateLimitUser rateLimitUser) throws Throwable {
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                    SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null && authentication.isAuthenticated()) {
-            User user = SecurityUtils.getCurrentUser();
+            if (authentication != null && authentication.isAuthenticated()) {
+                User user = SecurityUtils.getCurrentUser();
             if (user != null) {
                 String id = user.getId().toString();
                 String key = "ID:" + id;
